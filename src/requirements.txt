@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+weasyprint
+pymorphy3
+matplotlib
