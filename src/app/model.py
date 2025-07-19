@@ -27,7 +27,7 @@ class Legislation(BaseModel):
     title: str
     summary: str
     status: str
-    rejection_reason: str
+    rejection_reason: Optional[str] = None
 
 class Requests(BaseModel):
     utilities: str
