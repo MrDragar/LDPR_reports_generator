@@ -1,0 +1,5 @@
+{
+  "name": "LDPR Deputy Report Generator",
+  "description": "An application for LDPR deputies to fill out and generate reports on their activities. It allows inputting general information, legislative work, citizen interactions, and other significant activities into a structured form.",
+  "requestFramePermissions": []
+}
