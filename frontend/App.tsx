@@ -2,17 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { PlusIcon, TrashIcon, SpinnerIcon } from './components/icons';
 import AccordionSection from './components/AccordionSection';
 
-const SERVER_URL = 'http://192.168.43.199:8002';
+const SERVER_URL = process.env.SERVER_URL;
 
 const INPUT_CLASS = "w-full p-2 border-2 border-[#005BBB] rounded-md focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700] outline-none transition-shadow bg-gray-50 text-gray-900 placeholder:text-gray-500";
 const TEXTAREA_CLASS = `${INPUT_CLASS} min-h-[100px]`;
 const SELECT_CLASS = "w-full p-2 border-2 border-[#005BBB] rounded-md focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700] outline-none transition-shadow bg-gray-50 text-gray-900";
 const BUTTON_PRIMARY_CLASS = "bg-[#005BBB] text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed";
-const BUTTON_SECONDARY_CLASS = "bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-md hover:bg-gray-300 transition-colors";
+const BUTTON_SECONDARY_CLASS = "bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-md hover:bg-gray-300 transition-colors flex items-center gap-2";
+const BUTTON_IMPORT_CLASS = "bg-green-500 text-white font-bold py-2 px-4 rounded-md hover:bg-green-600 transition-colors";
 const BUTTON_DANGER_CLASS = "bg-red-500 text-white font-bold py-2 px-4 rounded-md hover:bg-red-600 transition-colors";
 const DYNAMIC_ITEM_CLASS = "p-4 border border-gray-200 rounded-lg mb-4 space-y-3 bg-white/50";
 
-const initialFormData: ReportFormData = {
+const initialFormData = {
     general_info: {
         full_name: "",
         district: "",
@@ -82,13 +83,7 @@ const REQUEST_TOPICS_CONFIG = [
     { key: 'integrated_territory_development', label: 'Развитие территорий' }
 ];
 
-interface ToastProps {
-    message: string;
-    type: 'success' | 'error';
-    onDismiss: () => void;
-}
-
-const Toast: React.FC<ToastProps> = ({ message, type, onDismiss }) => {
+const Toast = ({ message, type, onDismiss }) => {
     useEffect(() => {
         const timer = setTimeout(onDismiss, 5000);
         return () => clearTimeout(timer);
@@ -97,22 +92,14 @@ const Toast: React.FC<ToastProps> = ({ message, type, onDismiss }) => {
     const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
 
     return (
-        <div className={`fixed top-5 right-5 ${bgColor} text-white py-3 px-5 rounded-lg shadow-xl z-50`}>
+        <div className={`fixed top-5 right-5 ${bgColor} text-white py-3 px-5 rounded-lg shadow-xl z-50 flex items-center gap-2`}>
             {message}
-            <button onClick={onDismiss} className="ml-4 font-bold">X</button>
+            <button onClick={onDismiss} className="font-bold">X</button>
         </div>
     );
 };
 
-interface ModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onConfirm: () => void;
-    title: string;
-    message: string;
-}
-
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onConfirm, title, message }) => {
+const Modal = ({ isOpen, onClose, onConfirm, title, message }) => {
     if (!isOpen) return null;
 
     return (
@@ -133,10 +120,8 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onConfirm, title, messag
     );
 };
 
-type StringArrayKeys<T> = { [K in keyof T]: T[K] extends string[] ? K : never }[keyof T];
-
-const App: React.FC = () => {
-    const [formData, setFormData] = useState<ReportFormData>(() => {
+const App = () => {
+    const [formData, setFormData] = useState(() => {
         try {
             const savedDraft = localStorage.getItem('ldpr-report-draft');
             if (savedDraft) {
@@ -152,13 +137,33 @@ const App: React.FC = () => {
         return initialFormData;
     });
     const [isLoading, setIsLoading] = useState(false);
-    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-    const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+    const [toast, setToast] = useState(null);
+    const [validationErrors, setValidationErrors] = useState({});
     const [hasSubmitted, setHasSubmitted] = useState(false);
     const [showResetModal, setShowResetModal] = useState(false);
 
     useEffect(() => {
-        const errors: Record<string, string> = {};
+        const errors = {};
+
+        // Required fields validation
+        const requiredFields = [
+            { path: 'general_info', key: 'full_name', label: 'ФИО депутата' },
+            { path: 'general_info', key: 'district', label: 'Избирательный округ' },
+            { path: 'general_info', key: 'region', label: 'Субъект Российской Федерации' },
+            { path: 'general_info', key: 'authority_name', label: 'Наименование коллегиального органа власти' },
+            { path: 'general_info', key: 'term_start', label: 'Начало полномочий' },
+            { path: 'general_info', key: 'position', label: 'Должность' },
+            { path: 'citizen_requests', key: 'personal_meetings', label: 'Количество личных приемов граждан' },
+            { path: 'citizen_requests', key: 'responses', label: 'Количество данных ответов' },
+            { path: 'citizen_requests', key: 'official_queries', label: 'Количество депутатских запросов' },
+        ];
+
+        requiredFields.forEach(({ path, key, label }) => {
+            const value = formData[path][key];
+            if (hasSubmitted && !value) {
+                errors[`${path}.${key}`] = `${label}: обязательно для заполнения.`;
+            }
+        });
 
         // Numeric fields validation
         const numericFields = [
@@ -177,6 +182,9 @@ const App: React.FC = () => {
         // Request topics validation
         REQUEST_TOPICS_CONFIG.forEach(({ key, label }) => {
             const value = formData.citizen_requests.requests[key];
+            if (hasSubmitted && !value) {
+                errors[`requests.${key}`] = `${label}: обязательно для заполнения.`;
+            }
             if (value && !/^\d+$/.test(value)) {
                 errors[`requests.${key}`] = `${label}: должно быть целое число.`;
             }
@@ -193,6 +201,12 @@ const App: React.FC = () => {
             const totalValue = formData.general_info.sessions_attended[total];
             const attendedValue = formData.general_info.sessions_attended[attended];
 
+            if (hasSubmitted && !totalValue) {
+                errors[`sessions_attended.${total}`] = `${label} (всего): обязательно для заполнения.`;
+            }
+            if (hasSubmitted && !attendedValue) {
+                errors[`sessions_attended.${attended}`] = `${label} (посещено): обязательно для заполнения.`;
+            }
             if (totalValue && !/^\d+$/.test(totalValue)) {
                 errors[`sessions_attended.${total}`] = `${label} (всего): должно быть целое число.`;
             }
@@ -204,17 +218,47 @@ const App: React.FC = () => {
             }
         });
 
-        if (hasSubmitted) {
-            if (!formData.general_info.full_name) {
-                errors.full_name = "ФИО депутата обязательно для заполнения.";
+        // Legislation validation
+        formData.legislation.forEach((item, index) => {
+            if (hasSubmitted) {
+                if (!item.title) {
+                    errors[`legislation.${index}.title`] = `Инициатива #${index + 1}: Название законопроекта обязательно.`;
+                }
+                if (!item.summary) {
+                    errors[`legislation.${index}.summary`] = `Инициатива #${index + 1}: Краткое описание обязательно.`;
+                }
+                if (!item.status) {
+                    errors[`legislation.${index}.status`] = `Инициатива #${index + 1}: Статус обязателен.`;
+                }
+                if (item.status === 'Отклонен' && !item.rejection_reason) {
+                    errors[`legislation.${index}.rejection_reason`] = `Инициатива #${index + 1}: Причина отказа обязательна.`;
+                }
             }
-            if (!formData.general_info.district) {
-                errors.district = "Избирательный округ обязателен для заполнения.";
+        });
+
+        // Project activity validation
+        formData.project_activity.forEach((item, index) => {
+            if (hasSubmitted) {
+                if (!item.name) {
+                    errors[`project_activity.${index}.name`] = `Проект #${index + 1}: Наименование обязательно.`;
+                }
+                if (!item.result) {
+                    errors[`project_activity.${index}.result`] = `Проект #${index + 1}: Результаты обязательны.`;
+                }
             }
-            if (!formData.general_info.region) {
-                errors.region = "Субъект Российской Федерации обязателен для заполнения.";
+        });
+
+        // LDPR orders validation
+        formData.ldpr_orders.forEach((item, index) => {
+            if (hasSubmitted) {
+                if (!item.instruction) {
+                    errors[`ldpr_orders.${index}.instruction`] = `Поручение #${index + 1}: Конкретное поручение обязательно.`;
+                }
+                if (!item.action) {
+                    errors[`ldpr_orders.${index}.action`] = `Поручение #${index + 1}: Проделанная работа обязательна.`;
+                }
             }
-        }
+        });
 
         setValidationErrors(errors);
     }, [formData, hasSubmitted]);
@@ -228,6 +272,37 @@ const App: React.FC = () => {
         }
     }, [formData]);
 
+    const cleanFormData = (data) => {
+        const cleaned = { ...data };
+
+        // Clean string arrays
+        ['links', 'committees'].forEach(key => {
+            cleaned.general_info[key] = cleaned.general_info[key].filter(item => item.trim() !== '');
+        });
+        cleaned.citizen_requests.examples = cleaned.citizen_requests.examples.filter(item => item.trim() !== '');
+        cleaned.svo_support.projects = cleaned.svo_support.projects.filter(item => item.trim() !== '');
+
+        // Clean legislation array
+        cleaned.legislation = cleaned.legislation.filter(item => 
+            item.title.trim() !== '' || 
+            item.summary.trim() !== '' || 
+            item.status.trim() !== '' ||
+            item.rejection_reason.trim() !== ''
+        );
+
+        // Clean project activity and ldpr orders
+        cleaned.project_activity = cleaned.project_activity.filter(item => 
+            item.name.trim() !== '' || 
+            item.result.trim() !== ''
+        );
+        cleaned.ldpr_orders = cleaned.ldpr_orders.filter(item => 
+            item.instruction.trim() !== '' || 
+            item.action.trim() !== ''
+        );
+
+        return cleaned;
+    };
+
     const handleReset = () => {
         setFormData(initialFormData);
         localStorage.removeItem('ldpr-report-draft');
@@ -236,22 +311,58 @@ const App: React.FC = () => {
         setHasSubmitted(false);
     };
 
-    const validateForm = (): boolean => {
-        const errors: Record<string, string> = {};
-        if (!formData.general_info.full_name) {
-            errors.full_name = "ФИО депутата обязательно для заполнения.";
-        }
-        if (!formData.general_info.district) {
-            errors.district = "Избирательный округ обязателен для заполнения.";
-        }
-        if (!formData.general_info.region) {
-            errors.region = "Субъект Российской Федерации обязателен для заполнения.";
-        }
+    const validateForm = () => {
+        setHasSubmitted(true);
+        const errors = {};
+
+        // Required fields validation
+        const requiredFields = [
+            { path: 'general_info', key: 'full_name', label: 'ФИО депутата' },
+            { path: 'general_info', key: 'district', label: 'Избирательный округ' },
+            { path: 'general_info', key: 'region', label: 'Субъект Российской Федерации' },
+            { path: 'general_info', key: 'authority_name', label: 'Наименование коллегиального органа власти' },
+            { path: 'general_info', key: 'term_start', label: 'Начало полномочий' },
+            { path: 'general_info', key: 'position', label: 'Должность' },
+            { path: 'citizen_requests', key: 'personal_meetings', label: 'Количество личных приемов граждан' },
+            { path: 'citizen_requests', key: 'responses', label: 'Количество данных ответов' },
+            { path: 'citizen_requests', key: 'official_queries', label: 'Количество депутатских запросов' },
+        ];
+
+        requiredFields.forEach(({ path, key, label }) => {
+            const value = formData[path][key];
+            if (!value) {
+                errors[`${path}.${key}`] = `${label}: обязательно для заполнения.`;
+            }
+        });
+
+        // Validate request topics
+        REQUEST_TOPICS_CONFIG.forEach(({ key, label }) => {
+            if (!formData.citizen_requests.requests[key]) {
+                errors[`requests.${key}`] = `${label}: обязательно для заполнения.`;
+            }
+        });
+
+        // Validate sessions attended
+        const sessionFields = [
+            { total: 'total', attended: 'attended', label: 'Коллегиального органа власти' },
+            { total: 'committee_total', attended: 'committee_attended', label: 'Комитетов/комиссий' },
+            { total: 'ldpr_total', attended: 'ldpr_attended', label: 'Фракции ЛДПР' },
+        ];
+
+        sessionFields.forEach(({ total, attended, label }) => {
+            if (!formData.general_info.sessions_attended[total]) {
+                errors[`sessions_attended.${total}`] = `${label} (всего): обязательно для заполнения.`;
+            }
+            if (!formData.general_info.sessions_attended[attended]) {
+                errors[`sessions_attended.${attended}`] = `${label} (посещено): обязательно для заполнения.`;
+            }
+        });
+
         setValidationErrors(prev => ({ ...prev, ...errors }));
         return Object.keys(errors).length === 0 && Object.keys(validationErrors).length === 0;
     };
 
-    const downloadJson = (data: ReportFormData) => {
+    const downloadJson = (data) => {
         try {
             const jsonString = JSON.stringify(data, null, 2);
             const blob = new Blob([jsonString], { type: 'application/json' });
@@ -274,14 +385,14 @@ const App: React.FC = () => {
         }
     };
 
-    const handleImportJson = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImportJson = (event) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
-                const importedData = JSON.parse(e.target.result as string);
+                const importedData = JSON.parse(e.target.result);
                 if (!importedData.citizen_requests.requests) {
                     importedData.citizen_requests.requests = initialFormData.citizen_requests.requests;
                 }
@@ -297,14 +408,15 @@ const App: React.FC = () => {
 
     const handleExportJson = () => {
         try {
-            downloadJson(formData);
+            const cleanedData = cleanFormData(formData);
+            downloadJson(cleanedData);
             setToast({ message: "JSON файл успешно экспортирован", type: 'success' });
         } catch (error) {
             setToast({ message: "Ошибка при экспорте JSON файла", type: 'error' });
         }
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setHasSubmitted(true);
         if (!validateForm()) {
@@ -316,12 +428,13 @@ const App: React.FC = () => {
         setToast(null);
 
         try {
+            const cleanedData = cleanFormData(formData);
             const response = await fetch(SERVER_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(cleanedData),
             });
 
             if (!response.ok) {
@@ -362,94 +475,64 @@ const App: React.FC = () => {
         }
     };
 
-    const handleNestedChange = <P extends keyof ReportFormData, K extends keyof ReportFormData[P]>(
-        path: P,
-        key: K,
-        value: ReportFormData[P][K]
-    ) => {
+    const handleNestedChange = (path, key, value) => {
         setFormData(prev => ({
             ...prev,
             [path]: {
-                ...(prev[path] as object),
+                ...(prev[path]),
                 [key]: value
             }
         }));
     };
 
-    const handleDynamicListChange = <T,>(
-        listName: keyof ReportFormData,
-        index: number,
-        field: keyof T,
-        value: string
-    ) => {
+    const handleDynamicListChange = (listName, index, field, value) => {
         setFormData(prev => {
-            const list = [...(prev[listName] as T[])];
+            const list = [...(prev[listName])];
             list[index] = { ...list[index], [field]: value };
             return { ...prev, [listName]: list };
         });
     };
 
-    const addDynamicListItem = <T,>(listName: keyof ReportFormData, newItem: T) => {
+    const addDynamicListItem = (listName, newItem) => {
         setFormData(prev => ({
             ...prev,
-            [listName]: [...(prev[listName] as T[]), newItem]
+            [listName]: [...(prev[listName]), newItem]
         }));
     };
 
-    const removeDynamicListItem = (listName: keyof ReportFormData, index: number) => {
+    const removeDynamicListItem = (listName, index) => {
         setFormData(prev => ({
             ...prev,
-            [listName]: (prev[listName] as any[]).filter((_, i) => i !== index)
-        }));
+            [listName]: (prev[listName]).filter((_, i) => i !== index)
+        }))
     };
 
-    const handleStringArrayChange = <
-        P extends 'general_info' | 'citizen_requests' | 'svo_support',
-        S extends StringArrayKeys<ReportFormData[P]>
-    >(
-        path: P,
-        subpath: S,
-        index: number,
-        value: string
-    ) => {
+    const handleStringArrayChange = (path, subpath, index, value) => {
         setFormData(prev => {
             const section = { ...prev[path] };
-            const list = [...(section[subpath] as string[])];
+            const list = [...(section[subpath])];
             list[index] = value;
             return { ...prev, [path]: { ...section, [subpath]: list }};
         });
     };
 
-    const addStringArrayItem = <
-        P extends 'general_info' | 'citizen_requests' | 'svo_support',
-        S extends StringArrayKeys<ReportFormData[P]>
-    >(
-        path: P,
-        subpath: S
-    ) => {
+    const addStringArrayItem = (path, subpath) => {
         setFormData(prev => {
             const section = { ...prev[path] };
-            const list = [...(section[subpath] as string[]), ""];
+            const list = [...(section[subpath]), ""];
             return { ...prev, [path]: { ...section, [subpath]: list } };
         });
     };
 
-    const removeStringArrayItem = <
-        P extends 'general_info' | 'citizen_requests' | 'svo_support',
-        S extends StringArrayKeys<ReportFormData[P]>
-    >(
-        path: P,
-        subpath: S,
-        index: number
-    ) => {
+    const removeStringArrayItem = (path, subpath, index) => {
         setFormData(prev => {
             const section = { ...prev[path] };
-            const list = (section[subpath] as string[]).filter((_, i) => i !== index);
+            const list = (section[subpath]).filter((_, i) => i !== index);
             return { ...prev, [path]: { ...section, [subpath]: list } };
         });
     };
 
-    const renderError = (field: string) => validationErrors[field] && (
+    const renderError = (field) => validationErrors[field] && (
         <p className="text-red-500 text-sm mt-1">{validationErrors[field]}</p>
     );
 
@@ -476,15 +559,15 @@ const App: React.FC = () => {
                     <p className="text-black mt-4">Заполните поля для автоматического создания отчёта о проделанной работе.</p>
                 </header>
 
-                <div className="flex justify-center gap-4 mb-6">
+                <div className="flex flex-col sm:flex-row justify-center gap-4 mb-6">
                     <button
                         type="button"
                         onClick={() => setShowResetModal(true)}
-                        className={BUTTON_DANGER_CLASS}
+                        className={`${BUTTON_DANGER_CLASS} w-full sm:w-auto`}
                     >
                         Очистить форму
                     </button>
-                    <label className={BUTTON_SECONDARY_CLASS}>
+                    <label className={`${BUTTON_IMPORT_CLASS} w-full sm:w-auto cursor-pointer flex items-center justify-center`}>
                         Импортировать JSON
                         <input
                             type="file"
@@ -496,7 +579,7 @@ const App: React.FC = () => {
                     <button
                         type="button"
                         onClick={handleExportJson}
-                        className={BUTTON_SECONDARY_CLASS}
+                        className={`${BUTTON_SECONDARY_CLASS} w-full sm:w-auto cursor-pointer flex items-center justify-center`}
                     >
                         Экспортировать JSON
                     </button>
@@ -511,10 +594,10 @@ const App: React.FC = () => {
                                     type="text"
                                     value={formData.general_info.full_name}
                                     onChange={e => handleNestedChange('general_info', 'full_name', e.target.value)}
-                                    className={`${INPUT_CLASS} ${validationErrors.full_name ? 'border-red-500' : ''}`}
+                                    className={`${INPUT_CLASS} ${validationErrors['general_info.full_name'] ? 'border-red-500' : ''}`}
                                     required
                                 />
-                                {renderError('full_name')}
+                                {renderError('general_info.full_name')}
                             </div>
                             <div>
                                 <label className="font-semibold block mb-1">Избирательный округ*</label>
@@ -522,11 +605,11 @@ const App: React.FC = () => {
                                     type="text"
                                     value={formData.general_info.district}
                                     onChange={e => handleNestedChange('general_info', 'district', e.target.value)}
-                                    className={`${INPUT_CLASS} ${validationErrors.district ? 'border-red-500' : ''}`}
+                                    className={`${INPUT_CLASS} ${validationErrors['general_info.district'] ? 'border-red-500' : ''}`}
                                     placeholder="Территория, краткое описание"
                                     required
                                 />
-                                {renderError('district')}
+                                {renderError('general_info.district')}
                             </div>
                             <div>
                                 <label className="font-semibold block mb-1">Субъект Российской Федерации*</label>
@@ -534,29 +617,33 @@ const App: React.FC = () => {
                                     type="text"
                                     value={formData.general_info.region}
                                     onChange={e => handleNestedChange('general_info', 'region', e.target.value)}
-                                    className={`${INPUT_CLASS} ${validationErrors.region ? 'border-red-500' : ''}`}
+                                    className={`${INPUT_CLASS} ${validationErrors['general_info.region'] ? 'border-red-500' : ''}`}
                                     required
                                 />
-                                {renderError('region')}
+                                {renderError('general_info.region')}
                             </div>
                             <div>
-                                <label className="font-semibold block mb-1">Наименование коллегиального представительного органа власти</label>
+                                <label className="font-semibold block mb-1">Наименование коллегиального представительного органа власти*</label>
                                 <input
                                     type="text"
                                     value={formData.general_info.authority_name}
                                     onChange={e => handleNestedChange('general_info', 'authority_name', e.target.value)}
-                                    className={INPUT_CLASS}
+                                    className={`${INPUT_CLASS} ${validationErrors['general_info.authority_name'] ? 'border-red-500' : ''}`}
+                                    required
                                 />
+                                {renderError('general_info.authority_name')}
                             </div>
                             <div>
-                                <label className="font-semibold block mb-1">Начало полномочий</label>
+                                <label className="font-semibold block mb-1">Начало полномочий*</label>
                                 <input
                                     type="text"
                                     placeholder="ДД.ММ.ГГГГ"
                                     value={formData.general_info.term_start}
                                     onChange={e => handleNestedChange('general_info', 'term_start', e.target.value)}
-                                    className={INPUT_CLASS}
+                                    className={`${INPUT_CLASS} ${validationErrors['general_info.term_start'] ? 'border-red-500' : ''}`}
+                                    required
                                 />
+                                {renderError('general_info.term_start')}
                             </div>
                             <div>
                                 <label className="font-semibold block mb-1">Окончание полномочий</label>
@@ -569,13 +656,15 @@ const App: React.FC = () => {
                                 />
                             </div>
                             <div>
-                                <label className="font-semibold block mb-1">Должность (в коллегиальном органе власти)</label>
+                                <label className="font-semibold block mb-1">Должность (в коллегиальном органе власти)*</label>
                                 <input
                                     type="text"
                                     value={formData.general_info.position}
                                     onChange={e => handleNestedChange('general_info', 'position', e.target.value)}
-                                    className={INPUT_CLASS}
+                                    className={`${INPUT_CLASS} ${validationErrors['general_info.position'] ? 'border-red-500' : ''}`}
+                                    required
                                 />
+                                {renderError('general_info.position')}
                             </div>
                         </div>
 
@@ -602,7 +691,7 @@ const App: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={() => addStringArrayItem('general_info', 'links')}
-                                className={`${BUTTON_SECONDARY_CLASS} text-sm flex items-center gap-1`}
+                                className={`${BUTTON_SECONDARY_CLASS} text-sm`}
                             >
                                 <PlusIcon className="w-4 h-4"/>Добавить ссылку
                             </button>
@@ -631,14 +720,14 @@ const App: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={() => addStringArrayItem('general_info', 'committees')}
-                                className={`${BUTTON_SECONDARY_CLASS} text-sm flex items-center gap-1`}
+                                className={`${BUTTON_SECONDARY_CLASS} text-sm`}
                             >
                                 <PlusIcon className="w-4 h-4"/>Добавить комитет
                             </button>
                         </div>
 
                         <div className="mt-6 border-t pt-4">
-                            <label className="font-semibold block mb-2">Статистика посещаемости заседаний (посещено / всего)</label>
+                            <label className="font-semibold block mb-2">Статистика посещаемости заседаний (посещено / всего)*</label>
                             <div className="grid grid-cols-1 gap-4">
                                 <div>
                                     <label className="text-sm block mb-1">Коллегиального органа власти</label>
@@ -653,6 +742,7 @@ const App: React.FC = () => {
                                                     attended: e.target.value
                                                 })}
                                                 className={`${INPUT_CLASS} ${validationErrors['sessions_attended.attended'] ? 'border-red-500' : ''}`}
+                                                required
                                             />
                                             {renderError('sessions_attended.attended')}
                                         </div>
@@ -666,6 +756,7 @@ const App: React.FC = () => {
                                                     total: e.target.value
                                                 })}
                                                 className={`${INPUT_CLASS} ${validationErrors['sessions_attended.total'] ? 'border-red-500' : ''}`}
+                                                required
                                             />
                                             {renderError('sessions_attended.total')}
                                         </div>
@@ -684,6 +775,7 @@ const App: React.FC = () => {
                                                     committee_attended: e.target.value
                                                 })}
                                                 className={`${INPUT_CLASS} ${validationErrors['sessions_attended.committee_attended'] ? 'border-red-500' : ''}`}
+                                                required
                                             />
                                             {renderError('sessions_attended.committee_attended')}
                                         </div>
@@ -697,6 +789,7 @@ const App: React.FC = () => {
                                                     committee_total: e.target.value
                                                 })}
                                                 className={`${INPUT_CLASS} ${validationErrors['sessions_attended.committee_total'] ? 'border-red-500' : ''}`}
+                                                required
                                             />
                                             {renderError('sessions_attended.committee_total')}
                                         </div>
@@ -715,6 +808,7 @@ const App: React.FC = () => {
                                                     ldpr_attended: e.target.value
                                                 })}
                                                 className={`${INPUT_CLASS} ${validationErrors['sessions_attended.ldpr_attended'] ? 'border-red-500' : ''}`}
+                                                required
                                             />
                                             {renderError('sessions_attended.ldpr_attended')}
                                         </div>
@@ -728,6 +822,7 @@ const App: React.FC = () => {
                                                     ldpr_total: e.target.value
                                                 })}
                                                 className={`${INPUT_CLASS} ${validationErrors['sessions_attended.ldpr_total'] ? 'border-red-500' : ''}`}
+                                                required
                                             />
                                             {renderError('sessions_attended.ldpr_total')}
                                         </div>
@@ -752,43 +847,51 @@ const App: React.FC = () => {
                                     </button>
                                 </div>
                                 <div>
-                                    <label className="font-semibold block mb-1">Название законопроекта</label>
+                                    <label className="font-semibold block mb-1">Название законопроекта*</label>
                                     <input
                                         type="text"
                                         value={item.title}
-                                        onChange={e => handleDynamicListChange<Legislation>('legislation', index, 'title', e.target.value)}
-                                        className={INPUT_CLASS}
+                                        onChange={e => handleDynamicListChange('legislation', index, 'title', e.target.value)}
+                                        className={`${INPUT_CLASS} ${validationErrors[`legislation.${index}.title`] ? 'border-red-500' : ''}`}
+                                        required
                                     />
+                                    {renderError(`legislation.${index}.title`)}
                                 </div>
                                 <div>
-                                    <label className="font-semibold block mb-1">Краткое описание содержания законопроекта</label>
+                                    <label className="font-semibold block mb-1">Краткое описание содержания законопроекта*</label>
                                     <textarea
                                         value={item.summary}
-                                        onChange={e => handleDynamicListChange<Legislation>('legislation', index, 'summary', e.target.value)}
-                                        className={TEXTAREA_CLASS}
+                                        onChange={e => handleDynamicListChange('legislation', index, 'summary', e.target.value)}
+                                        className={`${TEXTAREA_CLASS} ${validationErrors[`legislation.${index}.summary`] ? 'border-red-500' : ''}`}
+                                        required
                                     ></textarea>
+                                    {renderError(`legislation.${index}.summary`)}
                                 </div>
                                 <div>
-                                    <label className="font-semibold block mb-1 text-sm">Результат рассмотрения</label>
+                                    <label className="font-semibold block mb-1 text-sm">Результат рассмотрения*</label>
                                     <select
                                         value={item.status}
-                                        onChange={e => handleDynamicListChange<Legislation>('legislation', index, 'status', e.target.value)}
-                                        className={SELECT_CLASS}
+                                        onChange={e => handleDynamicListChange('legislation', index, 'status', e.target.value)}
+                                        className={`${SELECT_CLASS} ${validationErrors[`legislation.${index}.status`] ? 'border-red-500' : ''}`}
+                                        required
                                     >
                                         <option value="">Выберите статус</option>
                                         <option value="Внесен и находится на рассмотрении">Внесен и находится на рассмотрении</option>
                                         <option value="Принят">Принят</option>
                                         <option value="Отклонен">Отклонен</option>
                                     </select>
+                                    {renderError(`legislation.${index}.status`)}
                                 </div>
                                 {item.status === 'Отклонен' && (
                                     <div>
-                                        <label className="font-semibold block mb-1 text-sm">Причина отказа с указанием субъекта отклонения</label>
+                                        <label className="font-semibold block mb-1 text-sm">Причина отказа с указанием субъекта отклонения*</label>
                                         <textarea
                                             value={item.rejection_reason}
-                                            onChange={e => handleDynamicListChange<Legislation>('legislation', index, 'rejection_reason', e.target.value)}
-                                            className={`${TEXTAREA_CLASS} min-h-[44px]`}
+                                            onChange={e => handleDynamicListChange('legislation', index, 'rejection_reason', e.target.value)}
+                                            className={`${TEXTAREA_CLASS} min-h-[44px] ${validationErrors[`legislation.${index}.rejection_reason`] ? 'border-red-500' : ''}`}
+                                            required
                                         ></textarea>
+                                        {renderError(`legislation.${index}.rejection_reason`)}
                                     </div>
                                 )}
                             </div>
@@ -796,7 +899,7 @@ const App: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => addDynamicListItem('legislation', { title: '', summary: '', status: '', rejection_reason: '' })}
-                            className={`${BUTTON_SECONDARY_CLASS} flex items-center gap-1`}
+                            className={`${BUTTON_SECONDARY_CLASS}`}
                         >
                             <PlusIcon className="w-5 h-5"/>Добавить инициативу
                         </button>
@@ -805,39 +908,42 @@ const App: React.FC = () => {
                     <AccordionSection title="3. Работа с обращениями граждан">
                         <div className="grid grid-cols-1 gap-4 mb-4">
                             <div>
-                                <label className="font-semibold block mb-1">Количество личных приемов граждан и встреч с избирателями</label>
+                                <label className="font-semibold block mb-1">Количество личных приемов граждан и встреч с избирателями*</label>
                                 <input
                                     type="text"
                                     value={formData.citizen_requests.personal_meetings}
                                     onChange={e => handleNestedChange('citizen_requests', 'personal_meetings', e.target.value)}
                                     className={`${INPUT_CLASS} ${validationErrors['citizen_requests.personal_meetings'] ? 'border-red-500' : ''}`}
+                                    required
                                 />
                                 {renderError('citizen_requests.personal_meetings')}
                             </div>
                             <div>
-                                <label className="font-semibold block mb-1">Количество данных ответов на обращения граждан</label>
+                                <label className="font-semibold block mb-1">Количество данных ответов на обращения граждан*</label>
                                 <input
                                     type="text"
                                     value={formData.citizen_requests.responses}
                                     onChange={e => handleNestedChange('citizen_requests', 'responses', e.target.value)}
                                     className={`${INPUT_CLASS} ${validationErrors['citizen_requests.responses'] ? 'border-red-500' : ''}`}
+                                    required
                                 />
                                 {renderError('citizen_requests.responses')}
                             </div>
                             <div>
-                                <label className="font-semibold block mb-1">Количество депутатских запросов и обращений в органы власти и иные организации по поступившим обращениям граждан</label>
+                                <label className="font-semibold block mb-1">Количество депутатских запросов и обращений в органы власти и иные организации по поступившим обращениям граждан*</label>
                                 <input
                                     type="text"
                                     value={formData.citizen_requests.official_queries}
                                     onChange={e => handleNestedChange('citizen_requests', 'official_queries', e.target.value)}
                                     className={`${INPUT_CLASS} ${validationErrors['citizen_requests.official_queries'] ? 'border-red-500' : ''}`}
+                                    required
                                 />
                                 {renderError('citizen_requests.official_queries')}
                             </div>
                         </div>
 
                         <div className="border-t pt-4">
-                            <label className="font-semibold block mb-2">Общее количество поступивших обращений за отчетный период</label>
+                            <label className="font-semibold block mb-2">Общее количество поступивших обращений за отчетный период*</label>
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                                 {REQUEST_TOPICS_CONFIG.map(topic => (
                                     <div key={topic.key}>
@@ -850,6 +956,7 @@ const App: React.FC = () => {
                                                 [topic.key]: e.target.value
                                             })}
                                             className={`${INPUT_CLASS} ${validationErrors[`requests.${topic.key}`] ? 'border-red-500' : ''}`}
+                                            required
                                         />
                                         {renderError(`requests.${topic.key}`)}
                                     </div>
@@ -884,7 +991,7 @@ const App: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={() => addStringArrayItem('citizen_requests', 'examples')}
-                                className={`${BUTTON_SECONDARY_CLASS} text-sm flex items-center gap-1`}
+                                className={`${BUTTON_SECONDARY_CLASS} text-sm`}
                             >
                                 <PlusIcon className="w-4 h-4"/>Добавить пример
                             </button>
@@ -907,7 +1014,7 @@ const App: React.FC = () => {
                                     type="button"
                                     onClick={() => removeStringArrayItem('svo_support', 'projects', index)}
                                     className="p-2 text-red-500 hover:text-red-700"
-                                >
+                                    >
                                     <TrashIcon className="w-6 h-6"/>
                                 </button>
                             </div>
@@ -915,7 +1022,7 @@ const App: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => addStringArrayItem('svo_support', 'projects')}
-                            className={`${BUTTON_SECONDARY_CLASS} text-sm flex items-center gap-1`}
+                            className={`${BUTTON_SECONDARY_CLASS} text-sm`}
                         >
                             <PlusIcon className="w-4 h-4"/>Добавить проект
                         </button>
@@ -936,28 +1043,32 @@ const App: React.FC = () => {
                                     </button>
                                 </div>
                                 <div>
-                                    <label className="font-semibold block mb-1">Наименование</label>
+                                    <label className="font-semibold block mb-1">Наименование*</label>
                                     <input
                                         type="text"
                                         value={item.name}
-                                        onChange={e => handleDynamicListChange<ProjectActivity>('project_activity', index, 'name', e.target.value)}
-                                        className={INPUT_CLASS}
+                                        onChange={e => handleDynamicListChange('project_activity', index, 'name', e.target.value)}
+                                        className={`${INPUT_CLASS} ${validationErrors[`project_activity.${index}.name`] ? 'border-red-500' : ''}`}
+                                        required
                                     />
+                                    {renderError(`project_activity.${index}.name`)}
                                 </div>
                                 <div className="mt-3">
-                                    <label className="font-semibold block mb-1">Результаты реализации (участия)</label>
+                                    <label className="font-semibold block mb-1">Результаты реализации (участия)*</label>
                                     <textarea
                                         value={item.result}
-                                        onChange={e => handleDynamicListChange<ProjectActivity>('project_activity', index, 'result', e.target.value)}
-                                        className={TEXTAREA_CLASS}
+                                        onChange={e => handleDynamicListChange('project_activity', index, 'result', e.target.value)}
+                                        className={`${TEXTAREA_CLASS} ${validationErrors[`project_activity.${index}.result`] ? 'border-red-500' : ''}`}
+                                        required
                                     ></textarea>
+                                    {renderError(`project_activity.${index}.result`)}
                                 </div>
                             </div>
                         ))}
                         <button
                             type="button"
                             onClick={() => addDynamicListItem('project_activity', { name: '', result: '' })}
-                            className={`${BUTTON_SECONDARY_CLASS} flex items-center gap-1`}
+                            className={`${BUTTON_SECONDARY_CLASS}`}
                         >
                             <PlusIcon className="w-5 h-5"/>Добавить проект
                         </button>
@@ -978,27 +1089,31 @@ const App: React.FC = () => {
                                     </button>
                                 </div>
                                 <div>
-                                    <label className="font-semibold block mb-1">Конкретное поручение</label>
+                                    <label className="font-semibold block mb-1">Конкретное поручение*</label>
                                     <textarea
                                         value={item.instruction}
-                                        onChange={e => handleDynamicListChange<LdprOrder>('ldpr_orders', index, 'instruction', e.target.value)}
-                                        className={TEXTAREA_CLASS}
+                                        onChange={e => handleDynamicListChange('ldpr_orders', index, 'instruction', e.target.value)}
+                                        className={`${TEXTAREA_CLASS} ${validationErrors[`ldpr_orders.${index}.instruction`] ? 'border-red-500' : ''}`}
+                                        required
                                     ></textarea>
+                                    {renderError(`ldpr_orders.${index}.instruction`)}
                                 </div>
                                 <div className="mt-3">
-                                    <label className="font-semibold block mb-1">Проделанная работа по реализации</label>
+                                    <label className="font-semibold block mb-1">Проделанная работа по реализации*</label>
                                     <textarea
                                         value={item.action}
-                                        onChange={e => handleDynamicListChange<LdprOrder>('ldpr_orders', index, 'action', e.target.value)}
-                                        className={TEXTAREA_CLASS}
+                                        onChange={e => handleDynamicListChange('ldpr_orders', index, 'action', e.target.value)}
+                                        className={`${TEXTAREA_CLASS} ${validationErrors[`ldpr_orders.${index}.action`] ? 'border-red-500' : ''}`}
+                                        required
                                     ></textarea>
+                                    {renderError(`ldpr_orders.${index}.action`)}
                                 </div>
                             </div>
                         ))}
                         <button
                             type="button"
                             onClick={() => addDynamicListItem('ldpr_orders', { instruction: '', action: '' })}
-                            className={`${BUTTON_SECONDARY_CLASS} flex items-center gap-1`}
+                            className={`${BUTTON_SECONDARY_CLASS}`}
                         >
                             <PlusIcon className="w-5 h-5"/>Добавить поручение
                         </button>
