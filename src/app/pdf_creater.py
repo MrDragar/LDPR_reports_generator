@@ -283,7 +283,7 @@ def generate_html_report(data):
     images_paths, requests_count = generate_bar_chart(data)
     images_text = "".join(f'<img src="file://{image_path}" style="max-width: 100%; height: auto;">' for image_path in images_paths)
     ldpr_requests_text = f"""
-    <p class="mt-4"><strong>Получено обращений на имя Председателя ЛДПР: <b>{data['citizen_requests']['requests'].get('appeals_to_ldpr_chairman', 0)}</b></strong></p>
+    <p class="mt-4 big"><strong>Получено обращений на имя Председателя ЛДПР: <b>{data['citizen_requests']['requests'].get('appeals_to_ldpr_chairman', 0)}</b></strong></p>
     """ if int(data['citizen_requests']['requests'].get('appeals_to_ldpr_chairman', 0)) > 0 else ""
 
     citizen_requests_text = f"""
@@ -309,6 +309,7 @@ def generate_html_report(data):
             * {{ -webkit-font-smoothing: antialiased; box-sizing: border-box; }}
             body {{ font-family: 'Geologica', sans-serif; font-size: 14px; line-height: 15.2px; color: #000000; background: #FFFFFF; margin: 0; height: 100%;
             width: 21cm;}}
+            .big {{font-size: 18px}}
             .container {{ width: 720px; margin: 0 auto; padding: 0 24px; margin-top: 40px; }}
             .ldpr-yellow {{ background-color: #FFC531; }}
             .ldpr-blue {{ color: #394B8C; }}
@@ -331,7 +332,7 @@ def generate_html_report(data):
                 padding: 0 20px;
             }}
             .header h1 {{ font-family: 'Geologica', sans-serif; font-size: 44px; font-weight: 400; text-transform: uppercase; line-height: 44px; margin-bottom: 6px; font-weight: 700;}}
-            .header h2 {{ font-family: 'Geologica', sans-serif; font-weight: 600; font-size: 16px; line-height: 17px; }}
+            .header h2 {{ font-family: 'Geologica', sans-serif; font-weight: 600; font-size: 16px; line-height: 17px; margin-top: 8px;}}
             .header p {{ font-family: 'Geologica', sans-serif; font-weight: 400; font-size: 12px; line-height: 14.4px; text-align: center; }}
             .section-container {{ margin-bottom: 29px; position: relative; }}
             h3 {{ font-family: 'Geologica', sans-serif; font-weight: 600; font-size: 26px; line-height: 22px; color: #000000; background: #FFC531; padding: 3px 0; margin-bottom: 20px; width: 100%; }}
