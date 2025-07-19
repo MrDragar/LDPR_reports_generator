@@ -8,8 +8,10 @@ services:
       - ./src:/usr/src/app
     ports:
       - "8002:8000"
+    restart: always
 
   frontend:
     build: ./frontend
     ports:
       - "80:80"
+    restart: always
