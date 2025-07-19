@@ -55,7 +55,7 @@ def generate_bar_chart(data):
     sorted_categories = sorted(categories.items(), key=lambda x: x[1], reverse=True)
 
     for category, count in sorted_categories:
-        chart_filename = f"chart_{uuid.uuid4()}.png"
+        chart_filename = f"tmp/chart_{uuid.uuid4()}.png"
         chart_abs_path = str(pathlib.Path.cwd() / chart_filename)
         output_paths.append(chart_abs_path)
 
