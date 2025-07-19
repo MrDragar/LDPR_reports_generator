@@ -202,5 +202,5 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-src/media
-src/tmp
+src/media/*
+src/tmp/*

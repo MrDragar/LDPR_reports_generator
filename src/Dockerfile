@@ -24,3 +24,5 @@ RUN set -eux \
 
 # copy project
 COPY . /usr/src/app/
+RUN mkdir /usr/src/tmp 
+RUN mkdir /usr/src/media
