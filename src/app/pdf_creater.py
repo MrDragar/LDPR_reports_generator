@@ -295,7 +295,14 @@ def generate_html_report(data):
     {ldpr_requests_text}
     <p class="mt-4">На обращения граждан было дано <strong>{data['citizen_requests']['responses']}</strong> {responses}, а также направлено <strong>{data['citizen_requests']['official_queries']}</strong> депутатских {official_queries} в органы власти и иные организации. Среди примеров успешной работы можно отметить: {examples_text}</p>
     """
-
+    other_info_text = f"""
+            <div class="section-container other_info">
+                <h3>7. ИНАЯ ЗНАЧИМАЯ ИНФОРМАЦИЯ</h3>
+                <div>
+                    <p>{data['other_info'].strip()}.</p>
+                </div>
+            </div>
+    """ if data['other_info'].strip() else ""
     html_content = f"""
     <!DOCTYPE html>
     <html lang="ru">
@@ -327,9 +334,6 @@ def generate_html_report(data):
                 padding-top: 20px;
                 padding-bottom: 20px;
             }}             
-           .other_info {{
-                {"display: None;" if not data['other_info'].strip() else ""}
-            }}
            .header-content {{
                 flex-grow: 1;
                 padding: 0 20px;
@@ -446,13 +450,7 @@ def generate_html_report(data):
                     <p>{ldpr_orders_text}</p>
                 </div>
             </div>
-
-            <div class="section-container other_info">
-                <h3>7. ИНАЯ ЗНАЧИМАЯ ИНФОРМАЦИЯ</h3>
-                <div>
-                    <p>{data['other_info'].strip()}.</p>
-                </div>
-            </div>
+            {other_info_text}
         </div>
     </body>
     </html>
@@ -479,3 +477,4 @@ if __name__ == "__main__":
 
     json_data = load_json_data(input_file)
     generate_pdf_report(json_data, output_file, True)
+
