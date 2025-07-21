@@ -11,7 +11,7 @@ const BUTTON_PRIMARY_CLASS = "bg-[#005BBB] text-white font-bold py-2 px-4 rounde
 const BUTTON_SECONDARY_CLASS = "bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-md hover:bg-gray-300 transition-colors flex items-center gap-2";
 const BUTTON_IMPORT_CLASS = "bg-green-500 text-white font-bold py-2 px-4 rounded-md hover:bg-green-600 transition-colors";
 const BUTTON_DANGER_CLASS = "bg-red-500 text-white font-bold py-2 px-4 rounded-md hover:bg-red-600 transition-colors";
-const DYNAMIC_ITEM_CLASS = "p-4 border border-gray-200 rounded-lg mb-4 space-y-3 bg-white/50";
+const DYNAMIC_ITEM_CLASS = "p-4 border border-gray-200 rounded-lg mb-4 space-y-3 bg-white/50 overflow-y: auto";
 
 const initialFormData = {
     general_info: {
@@ -568,7 +568,7 @@ const App = () => {
                         Очистить форму
                     </button>
                     <label className={`${BUTTON_IMPORT_CLASS} w-full sm:w-auto cursor-pointer flex items-center justify-center`}>
-                        Импортировать JSON
+                        Загрузить черновик
                         <input
                             type="file"
                             accept=".json"
@@ -581,7 +581,7 @@ const App = () => {
                         onClick={handleExportJson}
                         className={`${BUTTON_SECONDARY_CLASS} w-full sm:w-auto cursor-pointer flex items-center justify-center`}
                     >
-                        Экспортировать JSON
+                        Выгрузить черновик
                     </button>
                 </div>
 
@@ -834,72 +834,76 @@ const App = () => {
 
                     <AccordionSection title="2. Законотворческая (нормотворческая) деятельность">
                         <p className="text-black text-sm mb-4">Включите сюда инициативы, разработанные самостоятельно или в соавторстве с иными депутатами (сенаторами).</p>
-                        {formData.legislation.map((item, index) => (
-                            <div key={index} className={DYNAMIC_ITEM_CLASS}>
-                                <div className="flex justify-between items-start">
-                                    <h3 className="font-semibold text-lg text-black">Инициатива #{index + 1}</h3>
-                                    <button
-                                        type="button"
-                                        onClick={() => removeDynamicListItem('legislation', index)}
-                                        className="p-1 text-red-500 hover:text-red-700"
-                                    >
-                                        <TrashIcon className="w-6 h-6"/>
-                                    </button>
-                                </div>
-                                <div>
-                                    <label className="font-semibold block mb-1">Название законопроекта*</label>
-                                    <input
-                                        type="text"
-                                        value={item.title}
-                                        onChange={e => handleDynamicListChange('legislation', index, 'title', e.target.value)}
-                                        className={`${INPUT_CLASS} ${validationErrors[`legislation.${index}.title`] ? 'border-red-500' : ''}`}
-                                        required
-                                    />
-                                    {renderError(`legislation.${index}.title`)}
-                                </div>
-                                <div>
-                                    <label className="font-semibold block mb-1">Краткое описание содержания законопроекта*</label>
-                                    <textarea
-                                        value={item.summary}
-                                        onChange={e => handleDynamicListChange('legislation', index, 'summary', e.target.value)}
-                                        className={`${TEXTAREA_CLASS} ${validationErrors[`legislation.${index}.summary`] ? 'border-red-500' : ''}`}
-                                        required
-                                    ></textarea>
-                                    {renderError(`legislation.${index}.summary`)}
-                                </div>
-                                <div>
-                                    <label className="font-semibold block mb-1 text-sm">Результат рассмотрения*</label>
-                                    <select
-                                        value={item.status}
-                                        onChange={e => handleDynamicListChange('legislation', index, 'status', e.target.value)}
-                                        className={`${SELECT_CLASS} ${validationErrors[`legislation.${index}.status`] ? 'border-red-500' : ''}`}
-                                        required
-                                    >
-                                        <option value="">Выберите статус</option>
-                                        <option value="Внесен и находится на рассмотрении">Внесен и находится на рассмотрении</option>
-                                        <option value="Принят">Принят</option>
-                                        <option value="Отклонен">Отклонен</option>
-                                    </select>
-                                    {renderError(`legislation.${index}.status`)}
-                                </div>
-                                {item.status === 'Отклонен' && (
+                        
+                        <div className="max-h-[620px] overflow-y-auto pr-2"> 
+                            {formData.legislation.map((item, index) => (
+                                <div key={index} className={DYNAMIC_ITEM_CLASS}>
+                                    <div className="flex justify-between items-start">
+                                        <h3 className="font-semibold text-lg text-black">Инициатива #{index + 1}</h3>
+                                        <button
+                                            type="button"
+                                            onClick={() => removeDynamicListItem('legislation', index)}
+                                            className="p-1 text-red-500 hover:text-red-700"
+                                        >
+                                            <TrashIcon className="w-6 h-6"/>
+                                        </button>
+                                    </div>
                                     <div>
-                                        <label className="font-semibold block mb-1 text-sm">Причина отказа с указанием субъекта отклонения*</label>
+                                        <label className="font-semibold block mb-1">Название законопроекта*</label>
+                                        <input
+                                            type="text"
+                                            value={item.title}
+                                            onChange={e => handleDynamicListChange('legislation', index, 'title', e.target.value)}
+                                            className={`${INPUT_CLASS} ${validationErrors[`legislation.${index}.title`] ? 'border-red-500' : ''}`}
+                                            required
+                                        />
+                                        {renderError(`legislation.${index}.title`)}
+                                    </div>
+                                    <div>
+                                        <label className="font-semibold block mb-1">Краткое описание содержания законопроекта*</label>
                                         <textarea
-                                            value={item.rejection_reason}
-                                            onChange={e => handleDynamicListChange('legislation', index, 'rejection_reason', e.target.value)}
-                                            className={`${TEXTAREA_CLASS} min-h-[44px] ${validationErrors[`legislation.${index}.rejection_reason`] ? 'border-red-500' : ''}`}
+                                            value={item.summary}
+                                            onChange={e => handleDynamicListChange('legislation', index, 'summary', e.target.value)}
+                                            className={`${TEXTAREA_CLASS} ${validationErrors[`legislation.${index}.summary`] ? 'border-red-500' : ''}`}
                                             required
                                         ></textarea>
-                                        {renderError(`legislation.${index}.rejection_reason`)}
+                                        {renderError(`legislation.${index}.summary`)}
                                     </div>
-                                )}
-                            </div>
-                        ))}
+                                    <div>
+                                        <label className="font-semibold block mb-1 text-sm">Результат рассмотрения*</label>
+                                        <select
+                                            value={item.status}
+                                            onChange={e => handleDynamicListChange('legislation', index, 'status', e.target.value)}
+                                            className={`${SELECT_CLASS} ${validationErrors[`legislation.${index}.status`] ? 'border-red-500' : ''}`}
+                                            required
+                                        >
+                                            <option value="">Выберите статус</option>
+                                            <option value="Внесен и находится на рассмотрении">Внесен и находится на рассмотрении</option>
+                                            <option value="Принят">Принят</option>
+                                            <option value="Отклонен">Отклонен</option>
+                                        </select>
+                                        {renderError(`legislation.${index}.status`)}
+                                    </div>
+                                    {item.status === 'Отклонен' && (
+                                        <div>
+                                            <label className="font-semibold block mb-1 text-sm">Причина отказа с указанием субъекта отклонения*</label>
+                                            <textarea
+                                                value={item.rejection_reason}
+                                                onChange={e => handleDynamicListChange('legislation', index, 'rejection_reason', e.target.value)}
+                                                className={`${TEXTAREA_CLASS} min-h-[44px] ${validationErrors[`legislation.${index}.rejection_reason`] ? 'border-red-500' : ''}`}
+                                                required
+                                            ></textarea>
+                                            {renderError(`legislation.${index}.rejection_reason`)}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                        
                         <button
                             type="button"
                             onClick={() => addDynamicListItem('legislation', { title: '', summary: '', status: '', rejection_reason: '' })}
-                            className={`${BUTTON_SECONDARY_CLASS}`}
+                            className={`${BUTTON_SECONDARY_CLASS} mt-4`}
                         >
                             <PlusIcon className="w-5 h-5"/>Добавить инициативу
                         </button>
@@ -1030,41 +1034,46 @@ const App = () => {
 
                     <AccordionSection title="5. Представительская и проектная деятельность">
                         <p className="text-black text-sm mb-4">Укажите в свободной форме информацию о наиболее значимых проектах и мероприятиях, которые вы реализовали самостоятельно или в которых принимали участие.</p>
-                        {formData.project_activity.map((item, index) => (
-                            <div key={index} className={DYNAMIC_ITEM_CLASS}>
-                                <div className="flex justify-between items-start">
-                                    <h3 className="font-semibold text-lg text-black">Проект/мероприятие #{index + 1}</h3>
-                                    <button
-                                        type="button"
-                                        onClick={() => removeDynamicListItem('project_activity', index)}
-                                        className="p-1 text-red-500 hover:text-red-700"
-                                    >
-                                        <TrashIcon className="w-6 h-6"/>
-                                    </button>
+                        
+                        {/* Контейнер с скроллом */}
+                        <div className="max-h-[620px] overflow-y-auto pr-2 mb-4">
+                            {formData.project_activity.map((item, index) => (
+                                <div key={index} className={DYNAMIC_ITEM_CLASS}>
+                                    <div className="flex justify-between items-start">
+                                        <h3 className="font-semibold text-lg text-black">Проект/мероприятие #{index + 1}</h3>
+                                        <button
+                                            type="button"
+                                            onClick={() => removeDynamicListItem('project_activity', index)}
+                                            className="p-1 text-red-500 hover:text-red-700"
+                                        >
+                                            <TrashIcon className="w-6 h-6"/>
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <label className="font-semibold block mb-1">Наименование*</label>
+                                        <input
+                                            type="text"
+                                            value={item.name}
+                                            onChange={e => handleDynamicListChange('project_activity', index, 'name', e.target.value)}
+                                            className={`${INPUT_CLASS} ${validationErrors[`project_activity.${index}.name`] ? 'border-red-500' : ''}`}
+                                            required
+                                        />
+                                        {renderError(`project_activity.${index}.name`)}
+                                    </div>
+                                    <div className="mt-3">
+                                        <label className="font-semibold block mb-1">Результаты реализации (участия)*</label>
+                                        <textarea
+                                            value={item.result}
+                                            onChange={e => handleDynamicListChange('project_activity', index, 'result', e.target.value)}
+                                            className={`${TEXTAREA_CLASS} ${validationErrors[`project_activity.${index}.result`] ? 'border-red-500' : ''}`}
+                                            required
+                                        ></textarea>
+                                        {renderError(`project_activity.${index}.result`)}
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="font-semibold block mb-1">Наименование*</label>
-                                    <input
-                                        type="text"
-                                        value={item.name}
-                                        onChange={e => handleDynamicListChange('project_activity', index, 'name', e.target.value)}
-                                        className={`${INPUT_CLASS} ${validationErrors[`project_activity.${index}.name`] ? 'border-red-500' : ''}`}
-                                        required
-                                    />
-                                    {renderError(`project_activity.${index}.name`)}
-                                </div>
-                                <div className="mt-3">
-                                    <label className="font-semibold block mb-1">Результаты реализации (участия)*</label>
-                                    <textarea
-                                        value={item.result}
-                                        onChange={e => handleDynamicListChange('project_activity', index, 'result', e.target.value)}
-                                        className={`${TEXTAREA_CLASS} ${validationErrors[`project_activity.${index}.result`] ? 'border-red-500' : ''}`}
-                                        required
-                                    ></textarea>
-                                    {renderError(`project_activity.${index}.result`)}
-                                </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
+                        
                         <button
                             type="button"
                             onClick={() => addDynamicListItem('project_activity', { name: '', result: '' })}
@@ -1076,40 +1085,45 @@ const App = () => {
 
                     <AccordionSection title="6. Работа по реализации поручений Председателя ЛДПР">
                         <p className="text-black text-sm mb-4">Укажите конкретные поручения Председателя ЛДПР и информацию о проделанной работе по их реализации (мероприятия, законопроекты, контрольные мероприятия и т.п.).</p>
-                        {formData.ldpr_orders.map((item, index) => (
-                            <div key={index} className={DYNAMIC_ITEM_CLASS}>
-                                <div className="flex justify-between items-start">
-                                    <h3 className="font-semibold text-lg text-black">Поручение #{index + 1}</h3>
-                                    <button
-                                        type="button"
-                                        onClick={() => removeDynamicListItem('ldpr_orders', index)}
-                                        className="p-1 text-red-500 hover:text-red-700"
-                                    >
-                                        <TrashIcon className="w-6 h-6"/>
-                                    </button>
+                        
+                        {/* Контейнер с скроллом */}
+                        <div className="max-h-[620px] overflow-y-auto pr-2 mb-4">
+                            {formData.ldpr_orders.map((item, index) => (
+                                <div key={index} className={DYNAMIC_ITEM_CLASS}>
+                                    <div className="flex justify-between items-start">
+                                        <h3 className="font-semibold text-lg text-black">Поручение #{index + 1}</h3>
+                                        <button
+                                            type="button"
+                                            onClick={() => removeDynamicListItem('ldpr_orders', index)}
+                                            className="p-1 text-red-500 hover:text-red-700"
+                                        >
+                                            <TrashIcon className="w-6 h-6"/>
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <label className="font-semibold block mb-1">Конкретное поручение*</label>
+                                        <textarea
+                                            value={item.instruction}
+                                            onChange={e => handleDynamicListChange('ldpr_orders', index, 'instruction', e.target.value)}
+                                            className={`${TEXTAREA_CLASS} ${validationErrors[`ldpr_orders.${index}.instruction`] ? 'border-red-500' : ''}`}
+                                            required
+                                        ></textarea>
+                                        {renderError(`ldpr_orders.${index}.instruction`)}
+                                    </div>
+                                    <div className="mt-3">
+                                        <label className="font-semibold block mb-1">Проделанная работа по реализации*</label>
+                                        <textarea
+                                            value={item.action}
+                                            onChange={e => handleDynamicListChange('ldpr_orders', index, 'action', e.target.value)}
+                                            className={`${TEXTAREA_CLASS} ${validationErrors[`ldpr_orders.${index}.action`] ? 'border-red-500' : ''}`}
+                                            required
+                                        ></textarea>
+                                        {renderError(`ldpr_orders.${index}.action`)}
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="font-semibold block mb-1">Конкретное поручение*</label>
-                                    <textarea
-                                        value={item.instruction}
-                                        onChange={e => handleDynamicListChange('ldpr_orders', index, 'instruction', e.target.value)}
-                                        className={`${TEXTAREA_CLASS} ${validationErrors[`ldpr_orders.${index}.instruction`] ? 'border-red-500' : ''}`}
-                                        required
-                                    ></textarea>
-                                    {renderError(`ldpr_orders.${index}.instruction`)}
-                                </div>
-                                <div className="mt-3">
-                                    <label className="font-semibold block mb-1">Проделанная работа по реализации*</label>
-                                    <textarea
-                                        value={item.action}
-                                        onChange={e => handleDynamicListChange('ldpr_orders', index, 'action', e.target.value)}
-                                        className={`${TEXTAREA_CLASS} ${validationErrors[`ldpr_orders.${index}.action`] ? 'border-red-500' : ''}`}
-                                        required
-                                    ></textarea>
-                                    {renderError(`ldpr_orders.${index}.action`)}
-                                </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
+                        
                         <button
                             type="button"
                             onClick={() => addDynamicListItem('ldpr_orders', { instruction: '', action: '' })}

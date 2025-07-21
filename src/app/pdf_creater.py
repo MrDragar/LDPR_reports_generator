@@ -327,6 +327,9 @@ def generate_html_report(data):
                 padding-top: 20px;
                 padding-bottom: 20px;
             }}             
+           .other_info {{
+                {"display: None;" if data['other_info'].strip() else ""}
+            }}
            .header-content {{
                 flex-grow: 1;
                 padding: 0 20px;
@@ -444,7 +447,7 @@ def generate_html_report(data):
                 </div>
             </div>
 
-            <div class="section-container">
+            <div class="section-container other_info">
                 <h3>7. ИНАЯ ЗНАЧИМАЯ ИНФОРМАЦИЯ</h3>
                 <div>
                     <p>{data['other_info'].strip()}.</p>
