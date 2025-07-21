@@ -328,7 +328,7 @@ def generate_html_report(data):
                 padding-bottom: 20px;
             }}             
            .other_info {{
-                {"display: None;" if data['other_info'].strip() else ""}
+                {"display: None;" if not data['other_info'].strip() else ""}
             }}
            .header-content {{
                 flex-grow: 1;
