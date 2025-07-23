@@ -110,6 +110,7 @@ def generate_bar_chart(data):
             raise
     return output_paths, sum(categories.values())
 
+
 def generate_html_report(data):
     morph = pymorphy3.MorphAnalyzer()
 
@@ -125,24 +126,20 @@ def generate_html_report(data):
             items_html = ''.join(f'<li class="mb-2">{item_format(item)}</li>' for item in items)
             return f"{noun}: <ul class='list-disc pl-6'>{items_html}</ul>"
 
+    def just_list(items, head, item_format=lambda x: x):
+        if not items:
+            return
+        items_html = ''.join(f'<li class="mb-2">{item_format(item)}</li>' for item in items)
+        return f"{head}: <ul class='list-disc pl-6'>{items_html}</ul>"
+
     # Format links
-    links_text = format_list(
+    links_text = just_list(
         data['general_info']['links'],
-        "ресурс",
-        "ресурсы",
-        'nomn',
+        "Ссылки на ресурсы",
         lambda x: f'<a href="{x}" class="text-ldpr-blue">{x}</a>'
     )
-
-    # Format committees
-    count = len(data['general_info']['committees'])
-    if count == 0:
-        committees_text = "не комитетов."
-    elif count == 1:
-        committees_text = f"комитет: {data['general_info']['committees'][0]}."
-    else:
-        committees_text = f"комитетов: {', '.join(data['general_info']['committees'])}."
-
+    committees_text = ''.join(f'<li class="mb-2">{item}</li>' for item in data['general_info']['committees'])
+    committees_text = f"<ul class='list-disc pl-6'>{committees_text}</ul>"
     # Format legislation
     legislation_text = ""
     count = len(data['legislation'])
@@ -152,11 +149,12 @@ def generate_html_report(data):
         legislation_items = [
             f'<li class="mb-2"><strong>«{item["title"].strip()}»</strong>: {item["summary"].lower().strip()}. '
             f'<span>Статус: {item["status"]}.</span>'
-            f'{"" if not item["rejection_reason"] else f" Причина отклонения: {item['rejection_reason']}."}</li>'
+            f'{"" if "rejection_reason" not in item or not item["rejection_reason"] else f" Причина отклонения: {item['rejection_reason']}."}</li>'
             for item in data['legislation']
         ]
         noun = "законопроект" if count == 1 else "законопроекты"
-        legislation_text = f"В рамках законотворческой деятельности были внесены следующие {noun}:<ul class='list-disc pl-6'>{''.join(legislation_items)}</ul>"
+        legislation_text = f"Инициировал {count} законопроектов из которых {sum(1 for item in data['legislation'] if item['status'].startswith('Внесен'))} внесены, {sum(1 for item in data['legislation'] if item['status'] == 'Принят')} приняты, {sum(1 for item in data['legislation'] if item['status'] == 'Отклонен')} отклонены. "
+        legislation_text += f"В рамках законотворческой деятельности были внесены следующие {noun}:<ul class='list-disc pl-6'>{''.join(legislation_items)}</ul>"
 
     # Format citizen request examples
     examples_text = format_list(
@@ -164,7 +162,7 @@ def generate_html_report(data):
         "достижение",
         "достижения",
         'nomn',
-        lambda x: f'<span>{x}</span>'
+        lambda x: f'<span>{x["text"]}</span>'
     )
 
     # Format project activities
@@ -194,15 +192,16 @@ def generate_html_report(data):
         noun = "поручение" if count == 1 else "поручений"
         ldpr_orders_text = f"В рамках выполнения {noun} Председателя ЛДПР была проведена работа по следующим задачам:<ul class='list-disc pl-6'>{''.join(order_items)}</ul>"
 
-    # Format SVO support projects
+    # Format SVO support projects (исправлено для работы с dict)
     svo_support_text = ""
     count = len(data['svo_support']['projects'])
     if count == 0:
         svo_support_text = "проекты по поддержке СВО за отчетный период не проводились."
     else:
         svo_items = [
-            f'<li class="mb-2">{item.strip()}.</li>'
+            f'<li class="mb-2">{item.get("text", "").strip()}.</li>'
             for item in data['svo_support']['projects']
+            if item.get("text")
         ]
         noun = "проект" if count == 1 else "проектов"
         svo_support_text = f"В рамках поддержки участников СВО и их семей были реализованы следующие {noun}:<ul class='list-disc pl-6'>{''.join(svo_items)}</ul>"
@@ -347,7 +346,7 @@ def generate_html_report(data):
             p {{ margin: 0 0 6px 0; text-align: justify; font-family: 'Geologica', sans-serif; font-weight: 400; font-size: 14.0px; line-height: 15.2px; }}
             ul.list-disc {{ margin: 7px 0 6px 0; padding-left: 20px; list-style: none; }}
             ul.list-disc li {{ position: relative; padding-left: 20px; list-style-type: none; }}
-            ul.list-disc li::before {{ content: ''; background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjYiIGhlaWdodD0iNjMiIHZpZXdCb3g9IjAgMCA2NiA2MyIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTM1Ljk1NTYgMjcuOTQyM0w0MC4yOTg2IDAuMzgwODU5SDI1LjI2NTFMMjkuNjA4MSAyNy45NDIzTDQuNzE5MzEgMTUuNDE0NEwwLjA0MjIxMzQgMjkuNjEyN0wyNy40MzY2IDM0LjI4OThMNy44OTMwNSA1My44MzMzTDE5LjkxOTkgNjIuNjg2NEwzMi43ODE4IDM3Ljk2NDZMNDUuNjQzOSA2Mi42ODY0TDU3LjY3MDcgNTMuODMzM0wzOC4xMjcxIDM0LjI4OThMNjUuNTIxNSAyOS42MTI3TDYwLjg0NDQgMTUuNDE0NEwzNS45NTU2IDI3Ljk0MjNaIiBmaWxsPSIjRkRDNDJFIi8+Cjwvc3ZnPgo="); background-repeat: no-repeat; background-size: contain; position: absolute; left: 0; width: 12px; height: 12px; top: 3px; }}
+            ul.list-disc li::before {{ content: ''; background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjYiIGhlaWdodD0iNjIiIHZpZXdCb3g9IjAgMCA2NiA2MyIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTM1Ljk1NTYgMjcuOTQyM0w0MC4yOTg2IDAuMzgwODU5SDI1LjI2NTFMMjkuNjA4MSAyNy45NDIzTDQuNzE5MzEgMTUuNDE0NEwwLjA0MjIxMzQgMjkuNjEyN0wyNy40MzY2IDM0LjI4OThMNy44OTMwNSA1My44MzMzTDE5LjkxOTkgNjIuNjg2NEwzMi43ODE4IDM3Ljk2NDZMNDUuNjQzOSA2Mi42ODY0TDU3LjY3MDcgNTMuODMzM0wzOC4xMjcxIDM0LjI4OThMNjUuNTIxNSAyOS42MTI3TDYwLjg0NDQgMTUuNDE0NEwzNS45NTU2IDI3Ljk0MjNaIiBmaWxsPSIjRkRDNDJFIi8+Cjwvc3ZnPgo="); background-repeat: no-repeat; background-size: contain; position: absolute; left: 0; width: 12px; height: 12px; top: 3px; }}
             a {{ color: #394B8C; text-decoration: underline; }}
             .table-container {{ background: #EAF1F9; border-radius: 20px; margin: 15px 0; padding: 10px; padding-left: 20px; text-align: center; }}
             strong {{ font-weight: 600; }}
@@ -386,17 +385,14 @@ def generate_html_report(data):
     </head>
     <body>
 <div class="header">
+    <div class="header-decoration left"></div>
+    <div class="header-decoration right">
+        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTQwIiBoZWlnaHQ9IjU0MCIgdmlld0JveD0iMCAwIDU0MCA1NDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMF8yMDY2XzM2NikiPgo8cGF0aCBkPSJNMCAzOTBDMCAzMjMuNzI2IDUzLjcyNTggMjcwIDEyMCAyNzBIMjcwVjU0MEgwVjM5MFoiIGZpbGw9IiNDQ0Q4RTgiLz4KPHBhdGggZD0iTTI3MCAxMjBDMjcwIDIwMi84NDMgMzM3LjE1NyAyNzAgNDIwIDI3MEg1NDBWMEgyNzBWMTIwWiIgZmlsbD0iIzIzMjI1QiIvPgo8cGF0aCBkPSJNNTQwIDU0MFYyNzBIMjcwVjU0MEg1NDBaIiBmaWxsPSIjRkZDNTMxIi8+CjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNMjcwIDQ0OUMyNzAgMzUwLjE0MSAxODkuODU5IDI3MCA5MSAyNzBDMTg5Ljg1OSAyNzAgMjc0IDE4OS44NTkgMjcwIDkxQzI3MCAxODkuODU5IDM1MC4xNDEgMjc0IDQ0OSAyNzBDMzUwLjE0MSAyNzAgMjc0IDM1MC4xNDEgMjcwIDQ0OVoiIGZpbGw9IndoaXRlIi8+CjwvZz4KPGRlZnM+CjxjbGlwUGF0aCBpZD0iY2xpcDBfMjA2Nl8zNjYiPgo8cmVjdCB3aWR0aD0iNTQwIiBoZWlnaHQ9IjU0MCIgZmlsbD0id2hpdGUiLz4KPC9jbGlwUGF0aD4KPC9kZWZzPgo8L3N2Zz4K" alt="Right decoration">
+    </div>
     <div class="header-content">
         <h1>ОТЧЕТ О ПРОДЕЛАННОЙ <br> РАБОТЕ ДЕПУТАТА</h1>
         <h2>{data['general_info']['full_name']}</h2>
         <p>за I полугодие 2025 года</p>
-    </div>
-<!--    <div class="header-decoration right">
-        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTQwIiBoZWlnaHQ9IjU0MCIgdmlld0JveD0iMCAwIDU0MCA1NDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik0yNzAgMTIwQzI3MCAyMDIuODQzIDMzNy4xNTcgMjcwIDQyMCAyNzBINTQwVjBIMjcwVjEyMFoiIGZpbGw9IiMyMzIyNUIiLz4KPHBhdGggZD0iTTAgNTQwTDMuNTQwNjJlLTA1IDI3MEwyNzAgMjcwTDI3MCA1NDBMMCA1NDBaIiBmaWxsPSIjQ0JEN0U2Ii8+CjxyZWN0IHg9IjU0MCIgeT0iMjcwIiB3aWR0aD0iMjcwIiBoZWlnaHQ9IjI3MCIgdHJhbnNmb3JtPSJyb3RhdGUoOTAgNTQwIDI3MCkiIGZpbGw9IiNGRkM1MzEiLz4KPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik0yNzAgNDQ5QzI3MCAzNTAuMTQxIDE4OS44NTkgMjcwIDkxIDI3MEMxODkuODU5IDI3MCAyNzAgMTg5Ljg1OSAyNzAgOTFDMjcwIDE4OS44NTkgMzUwLjE0MSAyNzAgNDQ5IDI3MEMzNTAuMTQxIDI3MCAyNzAgMzUwLjE0MSAyNzAgNDQ5WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cg==" alt="Right decoration">
-    </div>
--->
-<div class="header-decoration right">
-        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTQwIiBoZWlnaHQ9IjU0MCIgdmlld0JveD0iMCAwIDU0MCA1NDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMF8yMDY2XzM2NikiPgo8cGF0aCBkPSJNMCAzOTBDMCAzMjMuNzI2IDUzLjcyNTggMjcwIDEyMCAyNzBIMjcwVjU0MEgwVjM5MFoiIGZpbGw9IiNDQ0Q4RTgiLz4KPHBhdGggZD0iTTI3MCAxMjBDMjcwIDIwMi44NDMgMzM3LjE1NyAyNzAgNDIwIDI3MEg1NDBWMEgyNzBWMTIwWiIgZmlsbD0iIzIzMjI1QiIvPgo8cGF0aCBkPSJNNTQwIDU0MFYyNzBIMjcwVjU0MEg1NDBaIiBmaWxsPSIjRkZDNTMxIi8+CjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNMjcwIDQ0OUMyNzAgMzUwLjE0MSAxODkuODU5IDI3MCA5MSAyNzBDMTg5Ljg1OSAyNzAgMjcwIDE4OS44NTkgMjcwIDkxQzI3MCAxODkuODU5IDM1MC4xNDEgMjcwIDQ0OSAyNzBDMzUwLjE0MSAyNzAgMjcwIDM1MC4xNDEgMjcwIDQ0OVoiIGZpbGw9IndoaXRlIi8+CjwvZz4KPGRlZnM+CjxjbGlwUGF0aCBpZD0iY2xpcDBfMjA2Nl8zNjYiPgo8cmVjdCB3aWR0aD0iNTQwIiBoZWlnaHQ9IjU0MCIgZmlsbD0id2hpdGUiLz4KPC9jbGlwUGF0aD4KPC9kZWZzPgo8L3N2Zz4K" alt="Right decoration">
     </div>
 </div>
 
@@ -404,15 +400,20 @@ def generate_html_report(data):
             <div class="section-container">
                 <h3>1. ОБЩАЯ ИНФОРМАЦИЯ</h3>
                 <div>
-                    <p><strong>{data['general_info']['full_name']}</strong> — депутат представляющий <strong>{data['general_info']['district'].strip()}</strong>, направленный в <strong>{data['general_info']['authority_name']}</strong>. Срок полномочий начался {data['general_info']['term_start']} и завершится {data['general_info']['term_end']}. В коллегиальном представительном органе власти занимает должность: <strong>{data['general_info']['position']}</strong>.</p>
-
-                    <p>Для связи с избирателями и общественностью используются {links_text}</p>
-                    <p>Депутат активно участвует в работе {committees_text}</p>
+                    <p>ФИО: <strong>{data['general_info']['full_name']}</strong></p>
+                    <p>Избирательный округ: {data['general_info']['district'].strip()}</p>
+                    <p>Срок полномочий: {data['general_info']['term_start']} - {data['general_info']['term_end']}</p>
+                    <p>Должность: {data['general_info']['position']}</p>
+                    <p>Должность во фракции ЛДПР: {data['general_info']['ldpr_position']}</p>
+                    <p>Комитеты и комиссии, в которых состоит:</p>
+                    {committees_text}
+                    <p class="mb-4">Участие в заседаниях:</p>
                     <ul class="list-disc">
                         <li>Заседания органа власти: присутствовал на {data['general_info']['sessions_attended']['attended']} из {data['general_info']['sessions_attended']['total']} {sessions_total}.</li>
                         <li>Заседания комитетов: присутствовал на {data['general_info']['sessions_attended']['committee_attended']} из {data['general_info']['sessions_attended']['committee_total']} {committee_total}.</li>
                         <li>Заседания фракции ЛДПР: присутствовал на {data['general_info']['sessions_attended']['ldpr_attended']} из {data['general_info']['sessions_attended']['ldpr_total']} {ldpr_total}.</li>
                     </ul>
+                    {links_text}
                 </div>
             </div>
 
@@ -458,6 +459,7 @@ def generate_html_report(data):
 
     return html_content, images_paths
 
+
 def generate_pdf_report(json_data, output_filename, debug=False):
     html_content, images_paths = generate_html_report(json_data)
 
@@ -472,8 +474,8 @@ def generate_pdf_report(json_data, output_filename, debug=False):
                 os.remove(image_path)
 
 if __name__ == "__main__":
-    input_file = "ldpr_report_фамилия_имя_отчество_2025_07_18_1.json"
-    output_file = "ldpr_report_фамилия_имя_отчество_2025_07_18_1.pdf"
+    input_file = "ldpr_report_слуцкий_леонид_эдуардович_2025_07_23_1.json"
+    output_file = "ldpr_report_слуцкий_леонид_эдуардович_2025_07_23_1.pdf"
 
     json_data = load_json_data(input_file)
     generate_pdf_report(json_data, output_file, True)
