@@ -244,7 +244,7 @@ def generate_html_report(data):
             for item in data['ldpr_orders']
         ]
         noun = "поручение" if count == 1 else "поручений"
-        ldpr_orders_text = f"В рамках выполнения {noun} Председателя ЛДПР была проведена работа по следующим задачам:<ul class='list-disc pl-6'>{''.join(order_items)}</ul>local_noun"
+        ldpr_orders_text = f"В рамках выполнения {noun} Председателя ЛДПР была проведена работа по следующим задачам:<ul class='list-disc pl-6'>{''.join(order_items)}</ul>"
 
     # Format SVO support projects (исправлено для работы с dict)
     svo_support_text = ""
