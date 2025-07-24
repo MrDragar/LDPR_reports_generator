@@ -82,3 +82,4 @@ class LDPRReport(BaseModel):
     project_activity: List[ProjectActivity]
     ldpr_orders: List[LDPROrders]
     other_info: Optional[str] = None  # Добавлено, так как присутствует в JSON
+    citizen_day_receptions: Dict[str, int]

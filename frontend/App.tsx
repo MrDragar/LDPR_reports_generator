@@ -1,16 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
+
 import { PlusIcon, TrashIcon, SpinnerIcon } from './components/icons';
+
 import AccordionSection from './components/AccordionSection';
 
 const SERVER_URL = process.env.SERVER_URL;
 
 const INPUT_CLASS = 'w-full p-2 border-2 border-[#005BBB] rounded-md focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700] outline-none transition-shadow bg-gray-50 text-gray-900 placeholder:text-gray-500';
+
 const TEXTAREA_CLASS = `${INPUT_CLASS} min-h-[100px] resize-y`;
+
 const SELECT_CLASS = 'w-full p-2 border-2 border-[#005BBB] rounded-md focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700] outline-none transition-shadow bg-gray-50 text-gray-900';
+
 const BUTTON_PRIMARY_CLASS = 'bg-[#005BBB] text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed';
+
 const BUTTON_SECONDARY_CLASS = 'bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-md hover:bg-gray-300 transition-colors flex items-center gap-2';
+
 const BUTTON_IMPORT_CLASS = 'bg-green-500 text-white font-bold py-2 px-4 rounded-md hover:bg-green-600 transition-colors';
+
 const BUTTON_DANGER_CLASS = 'bg-red-500 text-white font-bold py-2 px-4 rounded-md hover:bg-red-600 transition-colors';
+
 const DYNAMIC_ITEM_CLASS = 'p-4 border border-gray-200 rounded-lg mb-4 space-y-3 bg-white/50';
 
 const initialFormData = {
@@ -65,6 +74,15 @@ const initialFormData = {
   project_activity: [],
   ldpr_orders: [],
   other_info: '',
+  citizen_day_receptions: {
+    january: 0,
+    february: 0,
+    march: 0,
+    april: 0,
+    may: 0,
+    june: 0,
+    july: 0,
+  },
 };
 
 const REQUEST_TOPICS_CONFIG = [
@@ -90,9 +108,7 @@ const Toast = ({ message, type, onDismiss }) => {
     const timer = setTimeout(onDismiss, 5000);
     return () => clearTimeout(timer);
   }, [onDismiss]);
-
   const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
-
   return (
     <div className={`fixed top-5 right-5 ${bgColor} text-white py-3 px-5 rounded-lg shadow-xl z-50 flex items-center gap-2`}>
       {message}
@@ -103,7 +119,6 @@ const Toast = ({ message, type, onDismiss }) => {
 
 const Modal = ({ isOpen, onClose, onConfirm, title, message }) => {
   if (!isOpen) return null;
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg max-w-md w-full">
@@ -159,6 +174,10 @@ const App = () => {
           project_activity: Array.isArray(parsedDraft.project_activity) ? [...parsedDraft.project_activity] : [...initialFormData.project_activity],
           ldpr_orders: Array.isArray(parsedDraft.ldpr_orders) ? [...parsedDraft.ldpr_orders] : [...initialFormData.ldpr_orders],
           other_info: parsedDraft.other_info || initialFormData.other_info,
+          citizen_day_receptions: {
+            ...initialFormData.citizen_day_receptions,
+            ...parsedDraft.citizen_day_receptions,
+          },
         };
       }
     } catch (error) {
@@ -167,6 +186,7 @@ const App = () => {
     }
     return initialFormData;
   });
+
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
@@ -184,7 +204,6 @@ const App = () => {
 
   useEffect(() => {
     const errors = {};
-
     // Required fields validation
     const requiredFields = [
       { path: 'general_info', key: 'full_name', label: 'ФИО депутата' },
@@ -194,7 +213,6 @@ const App = () => {
       { path: 'general_info', key: 'term_start', label: 'Начало полномочий' },
       { path: 'general_info', key: 'position', label: 'Должность' },
     ];
-
     requiredFields.forEach(({ path, key, label }) => {
       const value = formData[path][key];
       if (hasSubmitted && !value) {
@@ -208,7 +226,6 @@ const App = () => {
       { path: 'citizen_requests', key: 'responses', label: 'Количество данных ответов на обращения граждан' },
       { path: 'citizen_requests', key: 'official_queries', label: 'Количество депутатских запросов и обращений' },
     ];
-
     numericFields.forEach(({ path, key, label }) => {
       const value = formData[path][key];
       if (value && !/^\d+$/.test(value)) {
@@ -230,7 +247,6 @@ const App = () => {
       { total: 'committee_total', attended: 'committee_attended', label: 'Комитетов/комиссий' },
       { total: 'ldpr_total', attended: 'ldpr_attended', label: 'Фракции ЛДПР' },
     ];
-
     sessionFields.forEach(({ total, attended, label }) => {
       const totalValue = formData.general_info.sessions_attended[total];
       const attendedValue = formData.general_info.sessions_attended[attended];
@@ -308,26 +324,22 @@ const App = () => {
 
   const cleanFormData = (data) => {
     const cleaned = { ...data };
-
     ['links', 'committees'].forEach((key) => {
       cleaned.general_info[key] = (cleaned.general_info[key] || []).filter((item) => item.trim() !== '');
       if (cleaned.general_info[key].length === 0) cleaned.general_info[key] = [''];
     });
-
     cleaned.citizen_requests.examples = (cleaned.citizen_requests.examples || []).map((example) => ({
       ...example,
       text: example.text.trim(),
       links: (example.links || []).filter((link) => link.trim() !== ''),
     })).filter((example) => example.text || (example.links || []).length > 0);
     if (cleaned.citizen_requests.examples.length === 0) cleaned.citizen_requests.examples = [{ text: '', links: [''] }];
-
     cleaned.svo_support.projects = (cleaned.svo_support.projects || []).map((project) => ({
       ...project,
       text: project.text.trim(),
       links: (project.links || []).filter((link) => link.trim() !== ''),
     })).filter((project) => project.text || (project.links || []).length > 0);
     if (cleaned.svo_support.projects.length === 0) cleaned.svo_support.projects = [{ text: '', links: [''] }];
-
     cleaned.legislation = (Array.isArray(cleaned.legislation) ? cleaned.legislation : []).map((item) => ({
       ...item,
       links: (item.links || []).filter((link) => link.trim() !== ''),
@@ -340,25 +352,27 @@ const App = () => {
         (item.links || []).length > 0
     );
     if (cleaned.legislation.length === 0) cleaned.legislation = [];
-
     cleaned.project_activity = (cleaned.project_activity || []).filter(
       (item) => item.name?.trim() !== '' || item.result?.trim() !== ''
     );
     if (cleaned.project_activity.length === 0) cleaned.project_activity = [];
-
     cleaned.ldpr_orders = (cleaned.ldpr_orders || []).filter(
       (item) => item.instruction?.trim() !== '' || item.action?.trim() !== ''
     );
     if (cleaned.ldpr_orders.length === 0) cleaned.ldpr_orders = [];
 
-    // Присваивание 0 для пустых числовых полей
+    // Оставляем значения 0/1 для citizen_day_receptions
+    cleaned.citizen_day_receptions = {
+      ...initialFormData.citizen_day_receptions,
+      ...cleaned.citizen_day_receptions,
+    };
+
     cleaned.citizen_requests.personal_meetings = cleaned.citizen_requests.personal_meetings || '0';
     cleaned.citizen_requests.responses = cleaned.citizen_requests.responses || '0';
     cleaned.citizen_requests.official_queries = cleaned.citizen_requests.official_queries || '0';
     cleaned.citizen_requests.requests = Object.fromEntries(
       Object.entries(cleaned.citizen_requests.requests).map(([key, value]) => [key, value || '0'])
     );
-
     return cleaned;
   };
 
@@ -381,20 +395,17 @@ const App = () => {
       { path: 'general_info', key: 'term_start', label: 'Начало полномочий' },
       { path: 'general_info', key: 'position', label: 'Должность' },
     ];
-
     requiredFields.forEach(({ path, key, label }) => {
       const value = formData[path][key];
       if (!value) {
         errors[`${path}.${key}`] = `${label}: обязательно для заполнения.`;
       }
     });
-
     const sessionFields = [
       { total: 'total', attended: 'attended', label: 'Коллегиального органа власти' },
       { total: 'committee_total', attended: 'committee_attended', label: 'Комитетов/комиссий' },
       { total: 'ldpr_total', attended: 'ldpr_attended', label: 'Фракции ЛДПР' },
     ];
-
     sessionFields.forEach(({ total, attended, label }) => {
       if (!formData.general_info.sessions_attended[total]) {
         errors[`sessions_attended.${total}`] = `${label} (всего): обязательно для заполнения.`;
@@ -403,7 +414,6 @@ const App = () => {
         errors[`sessions_attended.${attended}`] = `${label} (посещено): обязательно для заполнения.`;
       }
     });
-
     setValidationErrors((prev) => ({ ...prev, ...errors }));
     return Object.keys(errors).length === 0 && Object.keys(validationErrors).length === 0;
   };
@@ -432,7 +442,6 @@ const App = () => {
   const handleImportJson = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
@@ -468,6 +477,10 @@ const App = () => {
           project_activity: Array.isArray(importedData.project_activity) ? [...importedData.project_activity] : [...initialFormData.project_activity],
           ldpr_orders: Array.isArray(importedData.ldpr_orders) ? [...importedData.ldpr_orders] : [...initialFormData.ldpr_orders],
           other_info: importedData.other_info || initialFormData.other_info,
+          citizen_day_receptions: {
+            ...initialFormData.citizen_day_receptions,
+            ...importedData.citizen_day_receptions,
+          },
         }));
         setToast({ message: 'Данные успешно импортированы', type: 'success' });
       } catch (error) {
@@ -495,13 +508,10 @@ const App = () => {
       setToast({ message: 'Пожалуйста, исправьте ошибки в форме.', type: 'error' });
       return;
     }
-
     setIsLoading(true);
     setToast(null);
-
     try {
       const cleanedData = cleanFormData(formData);
-
       const response = await fetch(SERVER_URL, {
         method: 'POST',
         headers: {
@@ -509,22 +519,18 @@ const App = () => {
         },
         body: JSON.stringify(cleanedData),
       });
-
       if (!response.ok) {
         throw new Error(`Server error: ${response.status}`);
       }
-
       const result = await response.json();
       if (result.status !== 'Success' || !result.message) {
         throw new Error('Invalid server response');
       }
-
       const pdfUrl = result.message;
       const pdfResponse = await fetch(pdfUrl);
       if (!pdfResponse.ok) {
         throw new Error(`Failed to fetch PDF: ${pdfResponse.status}`);
       }
-
       const pdfBlob = await pdfResponse.blob();
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
@@ -537,7 +543,6 @@ const App = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-
       setToast({ message: 'Отчёт успешно сформирован и скачан!', type: 'success' });
     } catch (error) {
       console.error('Submission failed:', error);
@@ -767,7 +772,6 @@ const App = () => {
                 />
               </div>
             </div>
-
             <div className="mt-4">
               <label className="font-semibold block mb-2">Ссылки (соцсети, сайт)</label>
               {(formData.general_info.links || []).map((link, index) => (
@@ -796,7 +800,6 @@ const App = () => {
                 <PlusIcon className="w-4 h-4" /> Добавить ссылку
               </button>
             </div>
-
             <div className="mt-4">
               <label className="font-semibold block mb-2">В каких постоянных комитетах / комиссиях / рабочих группах состоит</label>
               {(formData.general_info.committees || []).map((committee, index) => (
@@ -825,7 +828,6 @@ const App = () => {
                 <PlusIcon className="w-4 h-4" /> Добавить комитет
               </button>
             </div>
-
             <div className="mt-6 border-t pt-4">
               <label className="font-semibold block mb-2">Статистика посещаемости заседаний (посещено / всего)*</label>
               <div className="grid grid-cols-1 gap-4">
@@ -943,7 +945,6 @@ const App = () => {
               </div>
             </div>
           </AccordionSection>
-
           <AccordionSection title="2. Законотворческая (нормотворческая) деятельность" isOpen={accordionStates.legislation} onToggle={() => toggleAccordion('legislation')}>
             <p className="text-black text-sm mb-4">Включите сюда инициативы, разработанные самостоятельно или в соавторстве с иными депутатами (сенаторами).</p>
             <div className="max-h-[620px] overflow-y-auto pr-2">
@@ -1056,7 +1057,6 @@ const App = () => {
               <PlusIcon className="w-5 h-5" /> Добавить инициативу
             </button>
           </AccordionSection>
-
           <AccordionSection title="3. Работа с обращениями граждан" isOpen={accordionStates.citizen_requests} onToggle={() => toggleAccordion('citizen_requests')}>
             <div className="grid grid-cols-1 gap-4 mb-4">
               <div>
@@ -1087,8 +1087,48 @@ const App = () => {
                 />
               </div>
             </div>
-
-            <div className="border-t pt-4">
+            <div className="mt-6 border-t pt-4">
+              <h3 className="font-semibold text-lg text-black mb-2">Приемы в рамках Всероссийского дня приема граждан</h3>
+              <p className="text-black text-sm mb-4">Выберите те месяцы, когда были проведены приемы.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                {['january', 'february', 'march', 'april', 'may', 'june', 'july'].map((month) => (
+                  <div key={month} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.citizen_day_receptions[month] === 1}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          citizen_day_receptions: {
+                            ...prev.citizen_day_receptions,
+                            [month]: e.target.checked ? 1 : 0,
+                          },
+                        }))
+                      }
+                      className="h-5 w-5 text-[#005BBB] focus:ring-[#FFD700] border-[#005BBB] rounded"
+                    />
+                    <label className="text-sm capitalize">
+                      {month === 'january' && 'Январь'}
+                      {month === 'february' && 'Февраль'}
+                      {month === 'march' && 'Март'}
+                      {month === 'april' && 'Апрель'}
+                      {month === 'may' && 'Май'}
+                      {month === 'june' && 'Июнь'}
+                      {month === 'july' && 'Июль'}
+                    </label>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4">
+                <p className="font-semibold">
+                  Проведено приемов:{' '}
+                  <span className="font-bold text-[#005BBB]">
+                    {Object.values(formData.citizen_day_receptions).filter((value) => value === 1).length} из 7
+                  </span>
+                </p>
+              </div>
+            </div>
+            <div className="mt-6 border-t pt-4">
               <label className="font-semibold block mb-2">Общее количество поступивших обращений за отчетный период</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {REQUEST_TOPICS_CONFIG.map((topic) => (
@@ -1115,7 +1155,6 @@ const App = () => {
                 </p>
               </div>
             </div>
-
             <div className="mt-6 border-t pt-4">
               <label className="font-semibold block mb-2">Несколько примеров с результатами работы по отдельным обращениям граждан (без публикации персональных данных заявителей)</label>
               <p className="text-black text-sm mb-3">Укажите в свободной форме</p>
@@ -1197,7 +1236,6 @@ const App = () => {
               </button>
             </div>
           </AccordionSection>
-
           <AccordionSection title="4. Работа с участниками СВО и членами их семей" isOpen={accordionStates.svo_support} onToggle={() => toggleAccordion('svo_support')}>
             <p className="text-black text-sm mb-4">
               Укажите в свободной форме информацию о деятельности с участниками СВО и их семьями, волонтерскими и иными
@@ -1281,7 +1319,6 @@ const App = () => {
               <PlusIcon className="w-4 h-4" /> Добавить проект
             </button>
           </AccordionSection>
-
           <AccordionSection title="5. Представительская и проектная деятельность" isOpen={accordionStates.project_activity} onToggle={() => toggleAccordion('project_activity')}>
             <p className="text-black text-sm mb-4">
               Укажите в свободной форме информацию о наиболее значимых проектах и мероприятиях, которые вы реализовали
@@ -1327,12 +1364,11 @@ const App = () => {
             <button
               type="button"
               onClick={() => addDynamicListItem('project_activity', { name: '', result: '' })}
-              className={`${BUTTON_SECONDARY_CLASS}`}
+              className={BUTTON_SECONDARY_CLASS}
             >
               <PlusIcon className="w-5 h-5" /> Добавить проект
             </button>
           </AccordionSection>
-
           <AccordionSection title="6. Работа по реализации поручений Председателя ЛДПР" isOpen={accordionStates.ldpr_orders} onToggle={() => toggleAccordion('ldpr_orders')}>
             <p className="text-black text-sm mb-4">
               Укажите конкретные поручения Председателя ЛДПР и информацию о проделанной работе по их реализации
@@ -1377,12 +1413,11 @@ const App = () => {
             <button
               type="button"
               onClick={() => addDynamicListItem('ldpr_orders', { instruction: '', action: '' })}
-              className={`${BUTTON_SECONDARY_CLASS}`}
+              className={BUTTON_SECONDARY_CLASS}
             >
               <PlusIcon className="w-5 h-5" /> Добавить поручение
             </button>
           </AccordionSection>
-
           <AccordionSection title="7. Иная значимая информация" isOpen={accordionStates.other_info} onToggle={() => toggleAccordion('other_info')}>
             <label className="font-semibold block mb-1">Опишите другую важную деятельность, не вошедшую в предыдущие разделы</label>
             <textarea
@@ -1391,7 +1426,6 @@ const App = () => {
               className={TEXTAREA_CLASS}
             />
           </AccordionSection>
-
           <div className="flex justify-center pt-6 border-t border-gray-300">
             <button
               type="submit"

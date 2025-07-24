@@ -12,6 +12,58 @@ def load_json_data(filename):
     with open(filename, 'r', encoding='utf-8') as file:
         return json.load(file)
 
+def declense_noun(noun, count):
+    if isinstance(count, str):
+        try:
+            count = int(count)
+        except ValueError:
+            count = 0
+    count_mod_10 = count % 10
+    count_mod_100 = count % 100
+    if noun == "прием":
+        if count_mod_10 == 1 and count_mod_100 != 11:
+            return "прием"
+        elif count_mod_10 in [2, 3, 4] and count_mod_100 not in [12, 13, 14]:
+            return "приема"
+        else:
+            return "приемов"
+    elif noun == "ответ":
+        if count_mod_10 == 1 and count_mod_100 != 11:
+            return "ответ"
+        elif count_mod_10 in [2, 3, 4] and count_mod_100 not in [12, 13, 14]:
+            return "ответа"
+        else:
+            return "ответов"
+    elif noun == "запрос":
+        if count_mod_10 == 1 and count_mod_100 != 11:
+            return "запрос"
+        elif count_mod_10 in [2, 3, 4] and count_mod_100 not in [12, 13, 14]:
+            return "запроса"
+        else:
+            return "запросов"
+    elif noun == "обращение":
+        if count_mod_10 == 1 and count_mod_100 != 11:
+            return "обращение"
+        elif count_mod_10 in [2, 3, 4] and count_mod_100 not in [12, 13, 14]:
+            return "обращения"
+        else:
+            return "обращений"
+    elif noun == "законопроект":
+        if count_mod_10 == 1 and count_mod_100 != 11:
+            return "законопроект"
+        elif count_mod_10 in [2, 3, 4] and count_mod_100 not in [12, 13, 14]:
+            return "законопроекта"
+        else:
+            return "законопроектов"
+    elif noun == "встреча":
+        if count_mod_10 == 1 and count_mod_100 != 11:
+            return "встречу"
+        elif count_mod_10 in [2, 3, 4] and count_mod_100 not in [12, 13, 14]:
+            return "встречи"
+        else:
+            return "встреч"
+    return noun
+
 def generate_bar_chart(data):
     output_paths = []
     # Prepare and sort data
@@ -153,7 +205,9 @@ def generate_html_report(data):
             for item in data['legislation']
         ]
         noun = "законопроект" if count == 1 else "законопроекты"
-        legislation_text = f"Инициировал {count} законопроектов из которых {sum(1 for item in data['legislation'] if item['status'].startswith('Внесен'))} внесены, {sum(1 for item in data['legislation'] if item['status'] == 'Принят')} приняты, {sum(1 for item in data['legislation'] if item['status'] == 'Отклонен')} отклонены. "
+        local_noun = declense_noun("законопроектов", count)
+
+        legislation_text = f"Инициировал {count} {local_noun} из которых {sum(1 for item in data['legislation'] if item['status'].startswith('Внесен'))} внесены, {sum(1 for item in data['legislation'] if item['status'] == 'Принят')} приняты, {sum(1 for item in data['legislation'] if item['status'] == 'Отклонен')} отклонены. "
         legislation_text += f"В рамках законотворческой деятельности были внесены следующие {noun}:<ul class='list-disc pl-6'>{''.join(legislation_items)}</ul>"
 
     # Format citizen request examples
@@ -190,7 +244,7 @@ def generate_html_report(data):
             for item in data['ldpr_orders']
         ]
         noun = "поручение" if count == 1 else "поручений"
-        ldpr_orders_text = f"В рамках выполнения {noun} Председателя ЛДПР была проведена работа по следующим задачам:<ul class='list-disc pl-6'>{''.join(order_items)}</ul>"
+        ldpr_orders_text = f"В рамках выполнения {noun} Председателя ЛДПР была проведена работа по следующим задачам:<ul class='list-disc pl-6'>{''.join(order_items)}</ul>local_noun"
 
     # Format SVO support projects (исправлено для работы с dict)
     svo_support_text = ""
@@ -230,44 +284,7 @@ def generate_html_report(data):
             else:
                 return "заседаний"
 
-    # Manual declension for other nouns
-    def declense_noun(noun, count):
-        if isinstance(count, str):
-            try:
-                count = int(count)
-            except ValueError:
-                count = 0
-        count_mod_10 = count % 10
-        count_mod_100 = count % 100
-        if noun == "прием":
-            if count_mod_10 == 1 and count_mod_100 != 11:
-                return "прием"
-            elif count_mod_10 in [2, 3, 4] and count_mod_100 not in [12, 13, 14]:
-                return "приема"
-            else:
-                return "приемов"
-        elif noun == "ответ":
-            if count_mod_10 == 1 and count_mod_100 != 11:
-                return "ответ"
-            elif count_mod_10 in [2, 3, 4] and count_mod_100 not in [12, 13, 14]:
-                return "ответа"
-            else:
-                return "ответов"
-        elif noun == "запрос":
-            if count_mod_10 == 1 and count_mod_100 != 11:
-                return "запрос"
-            elif count_mod_10 in [2, 3, 4] and count_mod_100 not in [12, 13, 14]:
-                return "запроса"
-            else:
-                return "запросов"
-        elif noun == "обращение":
-            if count_mod_10 == 1 and count_mod_100 != 11:
-                return "обращение"
-            elif count_mod_10 in [2, 3, 4] and count_mod_100 not in [12, 13, 14]:
-                return "обращения"
-            else:
-                return "обращений"
-        return noun
+
 
     sessions_total = declense_zasedanie(data['general_info']['sessions_attended']['total'])
     sessions_attended = declense_zasedanie(data['general_info']['sessions_attended']['attended'], prepositional=True)
@@ -284,9 +301,9 @@ def generate_html_report(data):
     ldpr_requests_text = f"""
     <p class="mt-4 big"><strong>Получено обращений на имя Председателя ЛДПР: <b>{data['citizen_requests']['requests'].get('appeals_to_ldpr_chairman', 0)}</b></strong></p>
     """ if int(data['citizen_requests']['requests'].get('appeals_to_ldpr_chairman', 0)) > 0 else ""
-
+    meeting_noun = declense_noun("встреча", sum(data["citizen_day_receptions"].values()))
     citizen_requests_text = f"""
-    <p class="mb-4">Депутат провел <strong>{data['citizen_requests']['personal_meetings']}</strong> личных {personal_meetings} граждан и встреч с избирателями. За отчетный период поступило множество письменных обращений, охватывающих различные тематики:</p>
+    <p class="mb-4">Депутат провел <strong>{data['citizen_requests']['personal_meetings']}</strong> личных {personal_meetings} граждан в том числе {sum(data["citizen_day_receptions"].values())} {meeting_noun} в рамках Всероссийского дня приема граждан. За отчетный период поступило множество письменных обращений, охватывающих различные тематики:</p>
     <div class="table-container">
         <h4>Тематика обращений граждан</h4>
         {images_text}
@@ -474,8 +491,8 @@ def generate_pdf_report(json_data, output_filename, debug=False):
                 os.remove(image_path)
 
 if __name__ == "__main__":
-    input_file = "ldpr_report_слуцкий_леонид_эдуардович_2025_07_23_1.json"
-    output_file = "ldpr_report_слуцкий_леонид_эдуардович_2025_07_23_1.pdf"
+    input_file = "ldpr_report_слуцкий_леонид_эдуардович_2025_07_24_5.json"
+    output_file = "ldpr_report_слуцкий_леонид_эдуардович_2025_07_24_5.pdf"
 
     json_data = load_json_data(input_file)
     generate_pdf_report(json_data, output_file, True)
