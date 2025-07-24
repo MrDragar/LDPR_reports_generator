@@ -208,7 +208,7 @@ def generate_html_report(data):
         local_noun = declense_noun("законопроект", count)
 
         legislation_text = f"Инициировал {count} {local_noun} из которых внесено — {sum(1 for item in data['legislation'] if item['status'].startswith('Внесен'))}, принято — {sum(1 for item in data['legislation'] if item['status'] == 'Принят')}, отклонено — {sum(1 for item in data['legislation'] if item['status'] == 'Отклонен')}. "
-        legislation_text += f"В рамках законотворческой деятельности были внесены следующие {noun}:<ul class='list-disc pl-6'>{''.join(legislation_items)}</ul>"
+        legislation_text += f"<ul class='list-disc pl-6'>{''.join(legislation_items)}</ul>"
 
     # Format citizen request examples
     examples_text = format_list(
@@ -231,7 +231,7 @@ def generate_html_report(data):
         ]
         proj_noun = "проект" if count == 1 else "проектов"
         event_noun = "мероприятие" if count == 1 else "мероприятий"
-        project_activity_text = f"Среди реализованных {proj_noun} и {event_noun} можно выделить:<ul class='list-disc pl-6'>{''.join(project_items)}</ul>"
+        project_activity_text = f"<ul class='list-disc pl-6'>{''.join(project_items)}</ul>"
 
     # Format LDPR orders
     ldpr_orders_text = ""
@@ -244,7 +244,7 @@ def generate_html_report(data):
             for item in data['ldpr_orders']
         ]
         noun = "поручение" if count == 1 else "поручений"
-        ldpr_orders_text = f"В рамках выполнения {noun} Председателя ЛДПР была проведена работа по следующим задачам:<ul class='list-disc pl-6'>{''.join(order_items)}</ul>"
+        ldpr_orders_text = f"<ul class='list-disc pl-6'>{''.join(order_items)}</ul>"
 
     # Format SVO support projects (исправлено для работы с dict)
     svo_support_text = ""
@@ -258,7 +258,7 @@ def generate_html_report(data):
             if item.get("text")
         ]
         noun = "проект" if count == 1 else "проектов"
-        svo_support_text = f"В рамках поддержки участников СВО и их семей были реализованы следующие {noun}:<ul class='list-disc pl-6'>{''.join(svo_items)}</ul>"
+        svo_support_text = f"<ul class='list-disc pl-6'>{''.join(svo_items)}</ul>"
 
     # Manual declension for заседание
     def declense_zasedanie(count, prepositional=False):
@@ -305,7 +305,6 @@ def generate_html_report(data):
     citizen_requests_text = f"""
     <p class="mb-4">Депутат провел <strong>{data['citizen_requests']['personal_meetings']}</strong> личных {personal_meetings} граждан в том числе {sum(data["citizen_day_receptions"].values())} {meeting_noun} в рамках Всероссийского дня приема граждан. За отчетный период поступило множество письменных обращений, охватывающих различные тематики:</p>
     <div class="table-container">
-        <h4>Тематика обращений граждан</h4>
         {images_text}
     </div>
     {ldpr_requests_text}
