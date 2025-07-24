@@ -253,7 +253,7 @@ def generate_html_report(data):
         svo_support_text = "проекты по поддержке СВО за отчетный период не проводились."
     else:
         svo_items = [
-            f'<li class="mb-2">{item.get("text", "").strip()}.</li>'
+            f'<li class="mb-2">{item.get("text", "").strip()}</li>'
             for item in data['svo_support']['projects']
             if item.get("text")
         ]
@@ -303,12 +303,12 @@ def generate_html_report(data):
     """ if int(data['citizen_requests']['requests'].get('appeals_to_ldpr_chairman', 0)) > 0 else ""
     meeting_noun = declense_noun("встреча", sum(data["citizen_day_receptions"].values()))
     citizen_requests_text = f"""
-    <p class="mb-4">Депутат провел <strong>{data['citizen_requests']['personal_meetings']}</strong> личных {personal_meetings} граждан в том числе {sum(data["citizen_day_receptions"].values())} {meeting_noun} в рамках Всероссийского дня приема граждан. За отчетный период поступило множество письменных обращений, охватывающих различные тематики:</p>
+    <p class="mb-4">Депутат провел <strong>{data['citizen_requests']['personal_meetings']}</strong> личных {personal_meetings} граждан в том числе {sum(data["citizen_day_receptions"].values())} {meeting_noun} в рамках Всероссийского дня приема граждан. За отчетный период поступило множество письменных обращений, охватывающие различные темы:</p>
     <div class="table-container">
         {images_text}
     </div>
     {ldpr_requests_text}
-    <p class="mt-4">На обращения граждан было дано <strong>{data['citizen_requests']['responses']}</strong> {responses}, а также направлено <strong>{data['citizen_requests']['official_queries']}</strong> депутатских {official_queries} в органы власти и иные организации. Среди примеров успешной работы можно отметить: {examples_text}</p>
+    <p class="mt-4">На обращения граждан было дано <strong>{data['citizen_requests']['responses']}</strong> {responses}, а также направлено <strong>{data['citizen_requests']['official_queries']}</strong> депутатских {official_queries} в органы власти и иные организации. Среди примеров успешной работы можно отметить {examples_text}</p>
     """
     other_info_text = f"""
             <div class="section-container other_info">
