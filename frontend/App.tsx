@@ -1,25 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-
 import { PlusIcon, TrashIcon, SpinnerIcon } from './components/icons';
-
 import AccordionSection from './components/AccordionSection';
 
 const SERVER_URL = process.env.SERVER_URL;
-
 const INPUT_CLASS = 'w-full p-2 border-2 border-[#005BBB] rounded-md focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700] outline-none transition-shadow bg-gray-50 text-gray-900 placeholder:text-gray-500';
-
 const TEXTAREA_CLASS = `${INPUT_CLASS} min-h-[100px] resize-y`;
-
 const SELECT_CLASS = 'w-full p-2 border-2 border-[#005BBB] rounded-md focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700] outline-none transition-shadow bg-gray-50 text-gray-900';
-
 const BUTTON_PRIMARY_CLASS = 'bg-[#005BBB] text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed';
-
 const BUTTON_SECONDARY_CLASS = 'bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-md hover:bg-gray-300 transition-colors flex items-center gap-2';
-
 const BUTTON_IMPORT_CLASS = 'bg-green-500 text-white font-bold py-2 px-4 rounded-md hover:bg-green-600 transition-colors';
-
 const BUTTON_DANGER_CLASS = 'bg-red-500 text-white font-bold py-2 px-4 rounded-md hover:bg-red-600 transition-colors';
-
 const DYNAMIC_ITEM_CLASS = 'p-4 border border-gray-200 rounded-lg mb-4 space-y-3 bg-white/50';
 
 const initialFormData = {
@@ -108,6 +98,7 @@ const Toast = ({ message, type, onDismiss }) => {
     const timer = setTimeout(onDismiss, 5000);
     return () => clearTimeout(timer);
   }, [onDismiss]);
+
   const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
   return (
     <div className={`fixed top-5 right-5 ${bgColor} text-white py-3 px-5 rounded-lg shadow-xl z-50 flex items-center gap-2`}>
@@ -125,12 +116,8 @@ const Modal = ({ isOpen, onClose, onConfirm, title, message }) => {
         <h2 className="text-xl font-bold text-red-600 mb-4">{title}</h2>
         <p className="text-gray-700 mb-6">{message}</p>
         <div className="flex justify-end gap-4">
-          <button onClick={onClose} className={BUTTON_SECONDARY_CLASS}>
-            Отмена
-          </button>
-          <button onClick={onConfirm} className={BUTTON_DANGER_CLASS}>
-            Подтвердить
-          </button>
+          <button onClick={onClose} className={BUTTON_SECONDARY_CLASS}>Отмена</button>
+          <button onClick={onConfirm} className={BUTTON_DANGER_CLASS}>Подтвердить</button>
         </div>
       </div>
     </div>
@@ -204,6 +191,7 @@ const App = () => {
 
   useEffect(() => {
     const errors = {};
+
     // Required fields validation
     const requiredFields = [
       { path: 'general_info', key: 'full_name', label: 'ФИО депутата' },
@@ -213,6 +201,7 @@ const App = () => {
       { path: 'general_info', key: 'term_start', label: 'Начало полномочий' },
       { path: 'general_info', key: 'position', label: 'Должность' },
     ];
+
     requiredFields.forEach(({ path, key, label }) => {
       const value = formData[path][key];
       if (hasSubmitted && !value) {
@@ -226,6 +215,7 @@ const App = () => {
       { path: 'citizen_requests', key: 'responses', label: 'Количество данных ответов на обращения граждан' },
       { path: 'citizen_requests', key: 'official_queries', label: 'Количество депутатских запросов и обращений' },
     ];
+
     numericFields.forEach(({ path, key, label }) => {
       const value = formData[path][key];
       if (value && !/^\d+$/.test(value)) {
@@ -247,6 +237,7 @@ const App = () => {
       { total: 'committee_total', attended: 'committee_attended', label: 'Комитетов/комиссий' },
       { total: 'ldpr_total', attended: 'ldpr_attended', label: 'Фракции ЛДПР' },
     ];
+
     sessionFields.forEach(({ total, attended, label }) => {
       const totalValue = formData.general_info.sessions_attended[total];
       const attendedValue = formData.general_info.sessions_attended[attended];
@@ -328,18 +319,21 @@ const App = () => {
       cleaned.general_info[key] = (cleaned.general_info[key] || []).filter((item) => item.trim() !== '');
       if (cleaned.general_info[key].length === 0) cleaned.general_info[key] = [''];
     });
+
     cleaned.citizen_requests.examples = (cleaned.citizen_requests.examples || []).map((example) => ({
       ...example,
       text: example.text.trim(),
       links: (example.links || []).filter((link) => link.trim() !== ''),
     })).filter((example) => example.text || (example.links || []).length > 0);
     if (cleaned.citizen_requests.examples.length === 0) cleaned.citizen_requests.examples = [{ text: '', links: [''] }];
+
     cleaned.svo_support.projects = (cleaned.svo_support.projects || []).map((project) => ({
       ...project,
       text: project.text.trim(),
       links: (project.links || []).filter((link) => link.trim() !== ''),
     })).filter((project) => project.text || (project.links || []).length > 0);
     if (cleaned.svo_support.projects.length === 0) cleaned.svo_support.projects = [{ text: '', links: [''] }];
+
     cleaned.legislation = (Array.isArray(cleaned.legislation) ? cleaned.legislation : []).map((item) => ({
       ...item,
       links: (item.links || []).filter((link) => link.trim() !== ''),
@@ -352,16 +346,17 @@ const App = () => {
         (item.links || []).length > 0
     );
     if (cleaned.legislation.length === 0) cleaned.legislation = [];
+
     cleaned.project_activity = (cleaned.project_activity || []).filter(
       (item) => item.name?.trim() !== '' || item.result?.trim() !== ''
     );
     if (cleaned.project_activity.length === 0) cleaned.project_activity = [];
+
     cleaned.ldpr_orders = (cleaned.ldpr_orders || []).filter(
       (item) => item.instruction?.trim() !== '' || item.action?.trim() !== ''
     );
     if (cleaned.ldpr_orders.length === 0) cleaned.ldpr_orders = [];
 
-    // Оставляем значения 0/1 для citizen_day_receptions
     cleaned.citizen_day_receptions = {
       ...initialFormData.citizen_day_receptions,
       ...cleaned.citizen_day_receptions,
@@ -373,6 +368,7 @@ const App = () => {
     cleaned.citizen_requests.requests = Object.fromEntries(
       Object.entries(cleaned.citizen_requests.requests).map(([key, value]) => [key, value || '0'])
     );
+
     return cleaned;
   };
 
@@ -395,17 +391,20 @@ const App = () => {
       { path: 'general_info', key: 'term_start', label: 'Начало полномочий' },
       { path: 'general_info', key: 'position', label: 'Должность' },
     ];
+
     requiredFields.forEach(({ path, key, label }) => {
       const value = formData[path][key];
       if (!value) {
         errors[`${path}.${key}`] = `${label}: обязательно для заполнения.`;
       }
     });
+
     const sessionFields = [
       { total: 'total', attended: 'attended', label: 'Коллегиального органа власти' },
       { total: 'committee_total', attended: 'committee_attended', label: 'Комитетов/комиссий' },
       { total: 'ldpr_total', attended: 'ldpr_attended', label: 'Фракции ЛДПР' },
     ];
+
     sessionFields.forEach(({ total, attended, label }) => {
       if (!formData.general_info.sessions_attended[total]) {
         errors[`sessions_attended.${total}`] = `${label} (всего): обязательно для заполнения.`;
@@ -414,6 +413,7 @@ const App = () => {
         errors[`sessions_attended.${attended}`] = `${label} (посещено): обязательно для заполнения.`;
       }
     });
+
     setValidationErrors((prev) => ({ ...prev, ...errors }));
     return Object.keys(errors).length === 0 && Object.keys(validationErrors).length === 0;
   };
@@ -537,8 +537,7 @@ const App = () => {
       const fullName = formData.general_info.full_name.trim() || 'deputy';
       const sanitizedName = fullName.toLowerCase().replace(/[\s/\\?%*:|"<>]/g, '_');
       const date = new Date().toISOString().split('T')[0];
-      a.download = `ldpr_report_${sanitizedName}_${date}.pdf`;
-      a.download = `${sanitizedName}_Отчет_2025(I).pdf`;
+      a.download = `${sanitizedName}_Отчет(I)${date}.pdf`;
       a.href = url;
       document.body.appendChild(a);
       a.click();
@@ -804,18 +803,17 @@ const App = () => {
             <div className="mt-4">
               <label className="font-semibold block mb-2">В каких постоянных комитетах / комиссиях / рабочих группах состоит</label>
               {(formData.general_info.committees || []).map((committee, index) => (
-                <div key={index} className="flex items-center gap-2 mb-2">
-                  <input
-                    type="text"
+                <div key={index} className="flex items-start gap-2 mb-2">
+                  <textarea
                     value={committee}
                     onChange={(e) => handleStringArrayChange('general_info', 'committees', index, e.target.value)}
-                    className={INPUT_CLASS}
+                    className={TEXTAREA_CLASS}
                     placeholder="Комитет по..."
                   />
                   <button
                     type="button"
                     onClick={() => removeStringArrayItem('general_info', 'committees', index)}
-                    className="p-2 text-red-500 hover:text-red-700"
+                    className="p-2 text-red-500 hover:text-red-700 mt-2"
                   >
                     <TrashIcon className="w-6 h-6" />
                   </button>
@@ -963,11 +961,10 @@ const App = () => {
                   </div>
                   <div>
                     <label className="font-semibold block mb-1">Название законопроекта*</label>
-                    <input
-                      type="text"
+                    <textarea
                       value={item.title || ''}
                       onChange={(e) => handleDynamicListChange('legislation', index, 'title', e.target.value)}
-                      className={`${INPUT_CLASS} ${validationErrors[`legislation.${index}.title`] ? 'border-red-500' : ''}`}
+                      className={`${TEXTAREA_CLASS} ${validationErrors[`legislation.${index}.title`] ? 'border-red-500' : ''}`}
                       required
                     />
                     {renderError(`legislation.${index}.title`)}
@@ -1340,11 +1337,10 @@ const App = () => {
                   </div>
                   <div>
                     <label className="font-semibold block mb-1">Наименование*</label>
-                    <input
-                      type="text"
+                    <textarea
                       value={item.name || ''}
                       onChange={(e) => handleDynamicListChange('project_activity', index, 'name', e.target.value)}
-                      className={`${INPUT_CLASS} ${validationErrors[`project_activity.${index}.name`] ? 'border-red-500' : ''}`}
+                      className={`${TEXTAREA_CLASS} ${validationErrors[`project_activity.${index}.name`] ? 'border-red-500' : ''}`}
                       required
                     />
                     {renderError(`project_activity.${index}.name`)}

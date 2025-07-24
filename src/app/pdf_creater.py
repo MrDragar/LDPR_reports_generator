@@ -303,7 +303,7 @@ def generate_html_report(data):
     """ if int(data['citizen_requests']['requests'].get('appeals_to_ldpr_chairman', 0)) > 0 else ""
     meeting_noun = declense_noun("встреча", sum(data["citizen_day_receptions"].values()))
     citizen_requests_text = f"""
-    <p class="mb-4">Депутат провел <strong>{data['citizen_requests']['personal_meetings']}</strong> личных {personal_meetings} граждан в том числе {sum(data["citizen_day_receptions"].values())} {meeting_noun} в рамках Всероссийского дня приема граждан. За отчетный период поступило множество письменных обращений, охватывающие различные темы:</p>
+    <p class="mb-4">Депутат провел <strong>{data['citizen_requests']['personal_meetings']}</strong> личных {personal_meetings} граждан в том числе {sum(data["citizen_day_receptions"].values())} {meeting_noun} в рамках Всероссийского дня приема граждан. За отчетный период поступило множество письменных обращений, охватывающих различные темы:</p>
     <div class="table-container">
         {images_text}
     </div>
