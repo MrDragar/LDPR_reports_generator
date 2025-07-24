@@ -205,7 +205,7 @@ def generate_html_report(data):
             for item in data['legislation']
         ]
         noun = "законопроект" if count == 1 else "законопроекты"
-        local_noun = declense_noun("законопроектов", count)
+        local_noun = declense_noun("законопроект", count)
 
         legislation_text = f"Инициировал {count} {local_noun} из которых {sum(1 for item in data['legislation'] if item['status'].startswith('Внесен'))} внесены, {sum(1 for item in data['legislation'] if item['status'] == 'Принят')} приняты, {sum(1 for item in data['legislation'] if item['status'] == 'Отклонен')} отклонены. "
         legislation_text += f"В рамках законотворческой деятельности были внесены следующие {noun}:<ul class='list-disc pl-6'>{''.join(legislation_items)}</ul>"
