@@ -134,14 +134,14 @@ const App = () => {
           general_info: {
             ...initialFormData.general_info,
             ...parsedDraft.general_info,
-            links: parsedDraft.general_info?.links || initialFormData.general_info.links,
-            committees: parsedDraft.general_info?.committees || initialFormData.general_info.committees,
+            links: Array.isArray(parsedDraft.general_info?.links) ? parsedDraft.general_info.links : initialFormData.general_info.links,
+            committees: Array.isArray(parsedDraft.general_info?.committees) ? parsedDraft.general_info.committees : initialFormData.general_info.committees,
             sessions_attended: {
               ...initialFormData.general_info.sessions_attended,
               ...parsedDraft.general_info?.sessions_attended,
             },
           },
-          legislation: parsedDraft.legislation || initialFormData.legislation,
+          legislation: Array.isArray(parsedDraft.legislation) ? [...parsedDraft.legislation] : [...initialFormData.legislation],
           citizen_requests: {
             ...initialFormData.citizen_requests,
             ...parsedDraft.citizen_requests,
@@ -149,15 +149,15 @@ const App = () => {
               ...initialFormData.citizen_requests.requests,
               ...(parsedDraft.citizen_requests?.requests || {}),
             },
-            examples: parsedDraft.citizen_requests?.examples || initialFormData.citizen_requests.examples,
+            examples: Array.isArray(parsedDraft.citizen_requests?.examples) ? [...parsedDraft.citizen_requests.examples] : [...initialFormData.citizen_requests.examples],
           },
           svo_support: {
             ...initialFormData.svo_support,
             ...parsedDraft.svo_support,
-            projects: parsedDraft.svo_support?.projects || initialFormData.svo_support.projects,
+            projects: Array.isArray(parsedDraft.svo_support?.projects) ? [...parsedDraft.svo_support.projects] : [...initialFormData.svo_support.projects],
           },
-          project_activity: parsedDraft.project_activity || initialFormData.project_activity,
-          ldpr_orders: parsedDraft.ldpr_orders || initialFormData.ldpr_orders,
+          project_activity: Array.isArray(parsedDraft.project_activity) ? [...parsedDraft.project_activity] : [...initialFormData.project_activity],
+          ldpr_orders: Array.isArray(parsedDraft.ldpr_orders) ? [...parsedDraft.ldpr_orders] : [...initialFormData.ldpr_orders],
           other_info: parsedDraft.other_info || initialFormData.other_info,
         };
       }
@@ -172,6 +172,15 @@ const App = () => {
   const [validationErrors, setValidationErrors] = useState({});
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [accordionStates, setAccordionStates] = useState({
+    general_info: true,
+    legislation: true,
+    citizen_requests: false,
+    svo_support: false,
+    project_activity: false,
+    ldpr_orders: false,
+    other_info: false,
+  });
 
   useEffect(() => {
     const errors = {};
@@ -181,7 +190,7 @@ const App = () => {
       { path: 'general_info', key: 'full_name', label: 'ФИО депутата' },
       { path: 'general_info', key: 'district', label: 'Избирательный округ' },
       { path: 'general_info', key: 'region', label: 'Субъект Российской Федерации' },
-      { path: 'general_info', key: 'authority_name', label: 'Наименование  представительного органа власти' },
+      { path: 'general_info', key: 'authority_name', label: 'Наименование представительного органа власти' },
       { path: 'general_info', key: 'term_start', label: 'Начало полномочий' },
       { path: 'general_info', key: 'position', label: 'Должность' },
     ];
@@ -319,26 +328,26 @@ const App = () => {
     })).filter((project) => project.text || (project.links || []).length > 0);
     if (cleaned.svo_support.projects.length === 0) cleaned.svo_support.projects = [{ text: '', links: [''] }];
 
-    cleaned.legislation = (cleaned.legislation || []).map((item) => ({
+    cleaned.legislation = (Array.isArray(cleaned.legislation) ? cleaned.legislation : []).map((item) => ({
       ...item,
       links: (item.links || []).filter((link) => link.trim() !== ''),
     })).filter(
       (item) =>
-        item.title.trim() !== '' ||
-        item.summary.trim() !== '' ||
-        item.status.trim() !== '' ||
-        item.rejection_reason.trim() !== '' ||
+        item.title?.trim() !== '' ||
+        item.summary?.trim() !== '' ||
+        item.status?.trim() !== '' ||
+        item.rejection_reason?.trim() !== '' ||
         (item.links || []).length > 0
     );
     if (cleaned.legislation.length === 0) cleaned.legislation = [];
 
     cleaned.project_activity = (cleaned.project_activity || []).filter(
-      (item) => item.name.trim() !== '' || item.result.trim() !== ''
+      (item) => item.name?.trim() !== '' || item.result?.trim() !== ''
     );
     if (cleaned.project_activity.length === 0) cleaned.project_activity = [];
 
     cleaned.ldpr_orders = (cleaned.ldpr_orders || []).filter(
-      (item) => item.instruction.trim() !== '' || item.action.trim() !== ''
+      (item) => item.instruction?.trim() !== '' || item.action?.trim() !== ''
     );
     if (cleaned.ldpr_orders.length === 0) cleaned.ldpr_orders = [];
 
@@ -428,20 +437,20 @@ const App = () => {
     reader.onload = (e) => {
       try {
         const importedData = JSON.parse(e.target.result);
-        setFormData({
+        setFormData((prev) => ({
           ...initialFormData,
           ...importedData,
           general_info: {
             ...initialFormData.general_info,
             ...importedData.general_info,
-            links: importedData.general_info?.links || initialFormData.general_info.links,
-            committees: importedData.general_info?.committees || initialFormData.general_info.committees,
+            links: Array.isArray(importedData.general_info?.links) ? [...importedData.general_info.links] : [...initialFormData.general_info.links],
+            committees: Array.isArray(importedData.general_info?.committees) ? [...importedData.general_info.committees] : [...initialFormData.general_info.committees],
             sessions_attended: {
               ...initialFormData.general_info.sessions_attended,
               ...importedData.general_info?.sessions_attended,
             },
           },
-          legislation: importedData.legislation || initialFormData.legislation,
+          legislation: Array.isArray(importedData.legislation) ? [...importedData.legislation] : [...initialFormData.legislation],
           citizen_requests: {
             ...initialFormData.citizen_requests,
             ...importedData.citizen_requests,
@@ -449,17 +458,17 @@ const App = () => {
               ...initialFormData.citizen_requests.requests,
               ...(importedData.citizen_requests?.requests || {}),
             },
-            examples: importedData.citizen_requests?.examples || initialFormData.citizen_requests.examples,
+            examples: Array.isArray(importedData.citizen_requests?.examples) ? [...importedData.citizen_requests.examples] : [...initialFormData.citizen_requests.examples],
           },
           svo_support: {
             ...initialFormData.svo_support,
             ...importedData.svo_support,
-            projects: importedData.svo_support?.projects || initialFormData.svo_support.projects,
+            projects: Array.isArray(importedData.svo_support?.projects) ? [...importedData.svo_support.projects] : [...initialFormData.svo_support.projects],
           },
-          project_activity: importedData.project_activity || initialFormData.project_activity,
-          ldpr_orders: importedData.ldpr_orders || initialFormData.ldpr_orders,
+          project_activity: Array.isArray(importedData.project_activity) ? [...importedData.project_activity] : [...initialFormData.project_activity],
+          ldpr_orders: Array.isArray(importedData.ldpr_orders) ? [...importedData.ldpr_orders] : [...initialFormData.ldpr_orders],
           other_info: importedData.other_info || initialFormData.other_info,
-        });
+        }));
         setToast({ message: 'Данные успешно импортированы', type: 'success' });
       } catch (error) {
         console.error('Failed to import JSON', error);
@@ -551,7 +560,7 @@ const App = () => {
 
   const handleDynamicListChange = (listName, index, field, value) => {
     setFormData((prev) => {
-      const list = [...(prev[listName] || [])];
+      const list = Array.isArray(prev[listName]) ? [...prev[listName]] : [];
       list[index] = { ...list[index], [field]: value };
       return { ...prev, [listName]: list };
     });
@@ -574,7 +583,7 @@ const App = () => {
   const handleStringArrayChange = (path, subpath, index, value, subIndex) => {
     setFormData((prev) => {
       const section = { ...prev[path] };
-      const list = [...(section[subpath] || [])];
+      const list = Array.isArray(section[subpath]) ? [...section[subpath]] : [];
       if (subIndex !== undefined) {
         list[index] = {
           ...list[index],
@@ -590,7 +599,7 @@ const App = () => {
   const addStringArrayItem = (path, subpath, index) => {
     setFormData((prev) => {
       const section = { ...prev[path] };
-      const list = [...(section[subpath] || [])];
+      const list = Array.isArray(section[subpath]) ? [...section[subpath]] : [];
       if (index !== undefined) {
         list[index] = { ...list[index], links: [...(list[index]?.links || []), ''] };
       } else {
@@ -603,7 +612,7 @@ const App = () => {
   const removeStringArrayItem = (path, subpath, index, subIndex) => {
     setFormData((prev) => {
       const section = { ...prev[path] };
-      const list = [...(section[subpath] || [])];
+      const list = Array.isArray(section[subpath]) ? [...section[subpath]] : [];
       if (subIndex !== undefined) {
         list[index] = {
           ...list[index],
@@ -622,6 +631,13 @@ const App = () => {
     const value = formData.citizen_requests.requests[key] || '0';
     return sum + (parseInt(value) || 0);
   }, 0);
+
+  const toggleAccordion = (section) => {
+    setAccordionStates((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
 
   return (
     <div className="bg-gray-100 min-h-screen p-4 sm:p-6 md:p-8">
@@ -661,7 +677,7 @@ const App = () => {
           </button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <AccordionSection title="1. Общая информация" isOpenDefault={true}>
+          <AccordionSection title="1. Общая информация" isOpen={accordionStates.general_info} onToggle={() => toggleAccordion('general_info')}>
             <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="font-semibold block mb-1">ФИО депутата (сенатора)*</label>
@@ -698,7 +714,7 @@ const App = () => {
                 {renderError('general_info.region')}
               </div>
               <div>
-                <label className="font-semibold block mb-1">Наименование  представительного органа власти*</label>
+                <label className="font-semibold block mb-1">Наименование представительного органа власти*</label>
                 <input
                   type="text"
                   value={formData.general_info.authority_name}
@@ -928,7 +944,7 @@ const App = () => {
             </div>
           </AccordionSection>
 
-          <AccordionSection title="2. Законотворческая (нормотворческая) деятельность">
+          <AccordionSection title="2. Законотворческая (нормотворческая) деятельность" isOpen={accordionStates.legislation} onToggle={() => toggleAccordion('legislation')}>
             <p className="text-black text-sm mb-4">Включите сюда инициативы, разработанные самостоятельно или в соавторстве с иными депутатами (сенаторами).</p>
             <div className="max-h-[620px] overflow-y-auto pr-2">
               {(formData.legislation || []).map((item, index) => (
@@ -947,7 +963,7 @@ const App = () => {
                     <label className="font-semibold block mb-1">Название законопроекта*</label>
                     <input
                       type="text"
-                      value={item.title}
+                      value={item.title || ''}
                       onChange={(e) => handleDynamicListChange('legislation', index, 'title', e.target.value)}
                       className={`${INPUT_CLASS} ${validationErrors[`legislation.${index}.title`] ? 'border-red-500' : ''}`}
                       required
@@ -957,7 +973,7 @@ const App = () => {
                   <div>
                     <label className="font-semibold block mb-1">Краткое описание содержания законопроекта*</label>
                     <textarea
-                      value={item.summary}
+                      value={item.summary || ''}
                       onChange={(e) => handleDynamicListChange('legislation', index, 'summary', e.target.value)}
                       className={`${TEXTAREA_CLASS} ${validationErrors[`legislation.${index}.summary`] ? 'border-red-500' : ''}`}
                       required
@@ -967,7 +983,7 @@ const App = () => {
                   <div>
                     <label className="font-semibold block mb-1 text-sm">Результат рассмотрения*</label>
                     <select
-                      value={item.status}
+                      value={item.status || ''}
                       onChange={(e) => handleDynamicListChange('legislation', index, 'status', e.target.value)}
                       className={`${SELECT_CLASS} ${validationErrors[`legislation.${index}.status`] ? 'border-red-500' : ''}`}
                       required
@@ -983,7 +999,7 @@ const App = () => {
                     <div>
                       <label className="font-semibold block mb-1 text-sm">Причина отказа с указанием субъекта отклонения*</label>
                       <textarea
-                        value={item.rejection_reason}
+                        value={item.rejection_reason || ''}
                         onChange={(e) => handleDynamicListChange('legislation', index, 'rejection_reason', e.target.value)}
                         className={`${TEXTAREA_CLASS} min-h-[44px] ${validationErrors[`legislation.${index}.rejection_reason`] ? 'border-red-500' : ''}`}
                         required
@@ -997,14 +1013,21 @@ const App = () => {
                       <div key={linkIndex} className="flex items-center gap-2 mb-2">
                         <input
                           type="url"
-                          value={link}
-                          onChange={(e) => handleStringArrayChange('legislation', 'links', index, e.target.value, linkIndex)}
+                          value={link || ''}
+                          onChange={(e) => {
+                            const newLinks = [...(item.links || [])];
+                            newLinks[linkIndex] = e.target.value;
+                            handleDynamicListChange('legislation', index, 'links', newLinks);
+                          }}
                           className={INPUT_CLASS}
                           placeholder="https://..."
                         />
                         <button
                           type="button"
-                          onClick={() => removeStringArrayItem('legislation', 'links', index, linkIndex)}
+                          onClick={() => {
+                            const newLinks = [...(item.links || [])].filter((_, i) => i !== linkIndex);
+                            handleDynamicListChange('legislation', index, 'links', newLinks);
+                          }}
                           className="p-2 text-red-500 hover:text-red-700"
                         >
                           <TrashIcon className="w-6 h-6" />
@@ -1013,7 +1036,10 @@ const App = () => {
                     ))}
                     <button
                       type="button"
-                      onClick={() => addStringArrayItem('legislation', 'links', index)}
+                      onClick={() => {
+                        const newLinks = [...(item.links || []), ''];
+                        handleDynamicListChange('legislation', index, 'links', newLinks);
+                      }}
                       className={`${BUTTON_SECONDARY_CLASS} text-sm`}
                     >
                       <PlusIcon className="w-4 h-4" /> Добавить ссылку
@@ -1024,16 +1050,14 @@ const App = () => {
             </div>
             <button
               type="button"
-              onClick={() =>
-                addDynamicListItem('legislation', { title: '', summary: '', status: '', rejection_reason: '', links: [''] })
-              }
+              onClick={() => addDynamicListItem('legislation', { title: '', summary: '', status: '', rejection_reason: '', links: [''] })}
               className={`${BUTTON_SECONDARY_CLASS} mt-4`}
             >
               <PlusIcon className="w-5 h-5" /> Добавить инициативу
             </button>
           </AccordionSection>
 
-          <AccordionSection title="3. Работа с обращениями граждан">
+          <AccordionSection title="3. Работа с обращениями граждан" isOpen={accordionStates.citizen_requests} onToggle={() => toggleAccordion('citizen_requests')}>
             <div className="grid grid-cols-1 gap-4 mb-4">
               <div>
                 <label className="font-semibold block mb-1">Количество личных приемов граждан и встреч с избирателями</label>
@@ -1174,7 +1198,7 @@ const App = () => {
             </div>
           </AccordionSection>
 
-          <AccordionSection title="4. Работа с участниками СВО и членами их семей">
+          <AccordionSection title="4. Работа с участниками СВО и членами их семей" isOpen={accordionStates.svo_support} onToggle={() => toggleAccordion('svo_support')}>
             <p className="text-black text-sm mb-4">
               Укажите в свободной форме информацию о деятельности с участниками СВО и их семьями, волонтерскими и иными
               организациями, а также о реализованных проектах и мероприятиях по этой тематике.
@@ -1258,7 +1282,7 @@ const App = () => {
             </button>
           </AccordionSection>
 
-          <AccordionSection title="5. Представительская и проектная деятельность">
+          <AccordionSection title="5. Представительская и проектная деятельность" isOpen={accordionStates.project_activity} onToggle={() => toggleAccordion('project_activity')}>
             <p className="text-black text-sm mb-4">
               Укажите в свободной форме информацию о наиболее значимых проектах и мероприятиях, которые вы реализовали
               самостоятельно или в которых принимали участие.
@@ -1280,7 +1304,7 @@ const App = () => {
                     <label className="font-semibold block mb-1">Наименование*</label>
                     <input
                       type="text"
-                      value={item.name}
+                      value={item.name || ''}
                       onChange={(e) => handleDynamicListChange('project_activity', index, 'name', e.target.value)}
                       className={`${INPUT_CLASS} ${validationErrors[`project_activity.${index}.name`] ? 'border-red-500' : ''}`}
                       required
@@ -1290,7 +1314,7 @@ const App = () => {
                   <div className="mt-3">
                     <label className="font-semibold block mb-1">Результаты реализации (участия)*</label>
                     <textarea
-                      value={item.result}
+                      value={item.result || ''}
                       onChange={(e) => handleDynamicListChange('project_activity', index, 'result', e.target.value)}
                       className={`${TEXTAREA_CLASS} ${validationErrors[`project_activity.${index}.result`] ? 'border-red-500' : ''}`}
                       required
@@ -1309,7 +1333,7 @@ const App = () => {
             </button>
           </AccordionSection>
 
-          <AccordionSection title="6. Работа по реализации поручений Председателя ЛДПР">
+          <AccordionSection title="6. Работа по реализации поручений Председателя ЛДПР" isOpen={accordionStates.ldpr_orders} onToggle={() => toggleAccordion('ldpr_orders')}>
             <p className="text-black text-sm mb-4">
               Укажите конкретные поручения Председателя ЛДПР и информацию о проделанной работе по их реализации
               (мероприятия, законопроекты, контрольные мероприятия и т.п.).
@@ -1330,7 +1354,7 @@ const App = () => {
                   <div>
                     <label className="font-semibold block mb-1">Конкретное поручение*</label>
                     <textarea
-                      value={item.instruction}
+                      value={item.instruction || ''}
                       onChange={(e) => handleDynamicListChange('ldpr_orders', index, 'instruction', e.target.value)}
                       className={`${TEXTAREA_CLASS} ${validationErrors[`ldpr_orders.${index}.instruction`] ? 'border-red-500' : ''}`}
                       required
@@ -1340,7 +1364,7 @@ const App = () => {
                   <div className="mt-3">
                     <label className="font-semibold block mb-1">Проделанная работа по реализации*</label>
                     <textarea
-                      value={item.action}
+                      value={item.action || ''}
                       onChange={(e) => handleDynamicListChange('ldpr_orders', index, 'action', e.target.value)}
                       className={`${TEXTAREA_CLASS} ${validationErrors[`ldpr_orders.${index}.action`] ? 'border-red-500' : ''}`}
                       required
@@ -1359,7 +1383,7 @@ const App = () => {
             </button>
           </AccordionSection>
 
-          <AccordionSection title="7. Иная значимая информация">
+          <AccordionSection title="7. Иная значимая информация" isOpen={accordionStates.other_info} onToggle={() => toggleAccordion('other_info')}>
             <label className="font-semibold block mb-1">Опишите другую важную деятельность, не вошедшую в предыдущие разделы</label>
             <textarea
               value={formData.other_info}
