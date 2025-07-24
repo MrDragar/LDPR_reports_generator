@@ -538,6 +538,7 @@ const App = () => {
       const sanitizedName = fullName.toLowerCase().replace(/[\s/\\?%*:|"<>]/g, '_');
       const date = new Date().toISOString().split('T')[0];
       a.download = `ldpr_report_${sanitizedName}_${date}.pdf`;
+      a.download = `${sanitizedName}_Отчет_2025(I).pdf`;
       a.href = url;
       document.body.appendChild(a);
       a.click();
