@@ -12,6 +12,11 @@ def load_json_data(filename):
     with open(filename, 'r', encoding='utf-8') as file:
         return json.load(file)
 
+def delete_dot(string):
+    if not string or string[-1] != ".":
+        return string
+    return string[:-1]
+
 def declense_noun(noun, count):
     if isinstance(count, str):
         try:
@@ -199,9 +204,9 @@ def generate_html_report(data):
         legislation_text = "законопроекты за отчетный период не вносились."
     else:
         legislation_items = [
-            f'<li class="mb-2"><strong>«{item["title"].strip()}»</strong>: {item["summary"].lower().strip()}. '
+            f'<li class="mb-2"><strong>«{item["title"].strip()}»</strong>: {delete_dot(item["summary"].lower().strip())}. '
             f'<span>Статус: {item["status"]}.</span>'
-            f'{"" if "rejection_reason" not in item or not item["rejection_reason"] else f" Причина отклонения: {item['rejection_reason']}."}</li>'
+            f'{"" if "rejection_reason" not in item or not item["rejection_reason"] else f" Причина отклонения: {delete_dot(item['rejection_reason'])}."}</li>'
             for item in data['legislation']
         ]
         noun = "законопроект" if count == 1 else "законопроекты"
@@ -216,7 +221,7 @@ def generate_html_report(data):
         "достижение",
         "достижения",
         'nomn',
-        lambda x: f'<span>{x["text"]}</span>'
+        lambda x: f'<span>{delete_dot(x["text"])}.</span>'
     )
 
     # Format project activities
@@ -226,7 +231,7 @@ def generate_html_report(data):
         project_activity_text = "проекты и мероприятия за отчетный период не проводились."
     else:
         project_items = [
-            f'<li class="mb-2"><strong>«{item["name"].strip()}»</strong>: {item["result"].lower().strip()}.</li>'
+            f'<li class="mb-2"><strong>«{item["name"].strip()}»</strong>: {delete_dot(item["result"].lower().strip())}.</li>'
             for item in data['project_activity']
         ]
         proj_noun = "проект" if count == 1 else "проектов"
@@ -240,7 +245,7 @@ def generate_html_report(data):
         ldpr_orders_text = "поручения Председателя ЛДПР за отчетный период отсутствуют."
     else:
         order_items = [
-            f'<li class="mb-2"><strong>«{item["instruction"].strip()}»</strong>: {item["action"].lower().strip()}.</li>'
+            f'<li class="mb-2"><strong>«{item["instruction"].strip()}»</strong>: {delete_dot(item["action"].lower().strip())}.</li>'
             for item in data['ldpr_orders']
         ]
         noun = "поручение" if count == 1 else "поручений"
@@ -253,7 +258,7 @@ def generate_html_report(data):
         svo_support_text = "проекты по поддержке СВО за отчетный период не проводились."
     else:
         svo_items = [
-            f'<li class="mb-2">{item.get("text", "").strip()}</li>'
+            f'<li class="mb-2">{delete_dot(item.get("text", "").strip())}.</li>'
             for item in data['svo_support']['projects']
             if item.get("text")
         ]
