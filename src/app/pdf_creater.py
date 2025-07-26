@@ -319,7 +319,7 @@ def generate_html_report(data):
             <div class="section-container other_info">
                 <h3>7. ИНАЯ ЗНАЧИМАЯ ИНФОРМАЦИЯ</h3>
                 <div>
-                    <p>{data['other_info'].strip()}</p>
+                    <p>{delete_dot(data['other_info'].strip())}.</p>
                 </div>
             </div>
     """ if data['other_info'].strip() else ""
