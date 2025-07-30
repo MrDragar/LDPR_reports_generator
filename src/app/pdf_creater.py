@@ -315,6 +315,12 @@ def generate_html_report(data):
     {ldpr_requests_text}
     <p class="mt-4">На обращения граждан было дано <strong>{data['citizen_requests']['responses']}</strong> {responses}, а также направлено <strong>{data['citizen_requests']['official_queries']}</strong> депутатских {official_queries} в органы власти и иные организации. Среди примеров успешной работы можно отметить {examples_text}</p>
     """
+    while "\\n" in data['other_info']:
+        data['other_info'] = data['other_info'].replace("\\n", "<br>")
+
+    while "\n" in data['other_info']:
+        data['other_info'] = data['other_info'].replace("\n", "<br>")
+
     other_info_text = f"""
             <div class="section-container other_info">
                 <h3>7. ИНАЯ ЗНАЧИМАЯ ИНФОРМАЦИЯ</h3>
