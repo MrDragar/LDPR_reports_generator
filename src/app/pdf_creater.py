@@ -370,7 +370,13 @@ def generate_html_report(data):
             .section-container {{ margin-bottom: 29px; position: relative; }}
             h3 {{ font-family: 'Geologica', sans-serif; font-weight: 600; font-size: 26px; line-height: 22px; color: #000000; background: #FFC531; padding: 3px 0; margin-bottom: 20px; width: 100%; }}
             h4 {{ text-align: center; }}
-            p {{ margin: 0 0 6px 0; text-align: justify; font-family: 'Geologica', sans-serif; font-weight: 400; font-size: 14.0px; line-height: 15.2px; }}
+            p {{ 
+                margin: 0 0 6px 0; 
+                # text-align: justify; 
+                font-family: 'Geologica',
+                sans-serif; font-weight: 400;
+                font-size: 14.0px; line-height: 15.2px; 
+            }}
             ul.list-disc {{ margin: 7px 0 6px 0; padding-left: 20px; list-style: none; }}
             ul.list-disc li {{ position: relative; padding-left: 20px; list-style-type: none; }}
             ul.list-disc li::before {{ content: ''; background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjYiIGhlaWdodD0iNjIiIHZpZXdCb3g9IjAgMCA2NiA2MyIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTM1Ljk1NTYgMjcuOTQyM0w0MC4yOTg2IDAuMzgwODU5SDI1LjI2NTFMMjkuNjA4MSAyNy45NDIzTDQuNzE5MzEgMTUuNDE0NEwwLjA0MjIxMzQgMjkuNjEyN0wyNy40MzY2IDM0LjI4OThMNy44OTMwNSA1My44MzMzTDE5LjkxOTkgNjIuNjg2NEwzMi43ODE4IDM3Ljk2NDZMNDUuNjQzOSA2Mi42ODY0TDU3LjY3MDcgNTMuODMzM0wzOC4xMjcxIDM0LjI4OThMNjUuNTIxNSAyOS42MTI3TDYwLjg0NDQgMTUuNDE0NEwzNS45NTU2IDI3Ljk0MjNaIiBmaWxsPSIjRkRDNDJFIi8+Cjwvc3ZnPgo="); background-repeat: no-repeat; background-size: contain; position: absolute; left: 0; width: 12px; height: 12px; top: 3px; }}
