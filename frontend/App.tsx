@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { PlusIcon, TrashIcon, SpinnerIcon } from './components/icons';
 import AccordionSection from './components/AccordionSection';
 
-const SERVER_URL = process.env.REACT_APP_SERVER_URL || 'http://95.182.121.84:8002/';
+const SERVER_URL = process.env.SERVER_URL;
 const INPUT_CLASS = 'w-full p-2 border-2 border-[#005BBB] rounded-md focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700] outline-none transition-shadow bg-gray-50 text-gray-900 placeholder:text-gray-500';
 const TEXTAREA_CLASS = `${INPUT_CLASS} min-h-[100px] resize-y`;
 const SELECT_CLASS = 'w-full p-2 border-2 border-[#005BBB] rounded-md focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700] outline-none transition-shadow bg-gray-50 text-gray-900';
