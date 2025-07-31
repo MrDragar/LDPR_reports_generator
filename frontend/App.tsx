@@ -2,22 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { PlusIcon, TrashIcon, SpinnerIcon } from './components/icons';
 import AccordionSection from './components/AccordionSection';
 
-const SERVER_URL = process.env.SERVER_URL;
-
+const SERVER_URL = process.env.REACT_APP_SERVER_URL || 'http://95.182.121.84:8002/';
 const INPUT_CLASS = 'w-full p-2 border-2 border-[#005BBB] rounded-md focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700] outline-none transition-shadow bg-gray-50 text-gray-900 placeholder:text-gray-500';
-
 const TEXTAREA_CLASS = `${INPUT_CLASS} min-h-[100px] resize-y`;
-
 const SELECT_CLASS = 'w-full p-2 border-2 border-[#005BBB] rounded-md focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700] outline-none transition-shadow bg-gray-50 text-gray-900';
-
 const BUTTON_PRIMARY_CLASS = 'bg-[#005BBB] text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed';
-
 const BUTTON_SECONDARY_CLASS = 'bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-md hover:bg-gray-300 transition-colors flex items-center gap-2';
-
 const BUTTON_IMPORT_CLASS = 'bg-green-500 text-white font-bold py-2 px-4 rounded-md hover:bg-green-600 transition-colors';
-
 const BUTTON_DANGER_CLASS = 'bg-red-500 text-white font-bold py-2 px-4 rounded-md hover:bg-red-600 transition-colors';
-
 const DYNAMIC_ITEM_CLASS = 'p-4 border border-gray-200 rounded-lg mb-4 space-y-3 bg-white/50';
 
 const initialFormData = {
@@ -108,7 +100,6 @@ const Toast = ({ message, type, onDismiss }) => {
   }, [onDismiss]);
 
   const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
-
   return (
     <div className={`fixed top-5 right-5 ${bgColor} text-white py-3 px-5 rounded-lg shadow-xl z-50 flex items-center gap-2`}>
       {message}
@@ -119,7 +110,6 @@ const Toast = ({ message, type, onDismiss }) => {
 
 const Modal = ({ isOpen, onClose, onConfirm, title, message }) => {
   if (!isOpen) return null;
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg max-w-md w-full">
@@ -170,7 +160,7 @@ const App = () => {
           },
           project_activity: Array.isArray(parsedDraft.project_activity) ? [...parsedDraft.project_activity] : [...initialFormData.project_activity],
           ldpr_orders: Array.isArray(parsedDraft.ldpr_orders) ? [...parsedDraft.ldpr_orders] : [...initialFormData.ldpr_orders],
-          other_info: typeof parsedDraft.other_info === 'string' ? parsedDraft.other_info : initialFormData.other_info,
+          other_info: parsedDraft.other_info || initialFormData.other_info,
           citizen_day_receptions: {
             ...initialFormData.citizen_day_receptions,
             ...parsedDraft.citizen_day_receptions,
@@ -219,7 +209,7 @@ const App = () => {
       }
     });
 
-    // Numeric fields validation for citizen_requests
+    // Numeric fields validation (optional, only if filled)
     const numericFields = [
       { path: 'citizen_requests', key: 'personal_meetings', label: 'Количество личных приемов граждан и встреч с избирателями' },
       { path: 'citizen_requests', key: 'responses', label: 'Количество данных ответов на обращения граждан' },
@@ -233,7 +223,7 @@ const App = () => {
       }
     });
 
-    // Request topics validation
+    // Request topics validation (optional, only if filled)
     REQUEST_TOPICS_CONFIG.forEach(({ key, label }) => {
       const value = formData.citizen_requests.requests[key];
       if (value && !/^\d+$/.test(value)) {
@@ -367,8 +357,11 @@ const App = () => {
     );
     if (cleaned.ldpr_orders.length === 0) cleaned.ldpr_orders = [];
 
-    cleaned.other_info = cleaned.other_info?.trim() || '';
-    
+    cleaned.citizen_day_receptions = {
+      ...initialFormData.citizen_day_receptions,
+      ...cleaned.citizen_day_receptions,
+    };
+
     cleaned.citizen_requests.personal_meetings = cleaned.citizen_requests.personal_meetings || '0';
     cleaned.citizen_requests.responses = cleaned.citizen_requests.responses || '0';
     cleaned.citizen_requests.official_queries = cleaned.citizen_requests.official_queries || '0';
@@ -390,7 +383,6 @@ const App = () => {
   const validateForm = () => {
     setHasSubmitted(true);
     const errors = {};
-
     const requiredFields = [
       { path: 'general_info', key: 'full_name', label: 'ФИО депутата' },
       { path: 'general_info', key: 'district', label: 'Избирательный округ' },
@@ -450,7 +442,6 @@ const App = () => {
   const handleImportJson = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
@@ -485,7 +476,7 @@ const App = () => {
           },
           project_activity: Array.isArray(importedData.project_activity) ? [...importedData.project_activity] : [...initialFormData.project_activity],
           ldpr_orders: Array.isArray(importedData.ldpr_orders) ? [...importedData.ldpr_orders] : [...initialFormData.ldpr_orders],
-          other_info: typeof importedData.other_info === 'string' ? importedData.other_info : initialFormData.other_info,
+          other_info: importedData.other_info || initialFormData.other_info,
           citizen_day_receptions: {
             ...initialFormData.citizen_day_receptions,
             ...importedData.citizen_day_receptions,
@@ -513,15 +504,12 @@ const App = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setHasSubmitted(true);
-
     if (!validateForm()) {
       setToast({ message: 'Пожалуйста, исправьте ошибки в форме.', type: 'error' });
       return;
     }
-
     setIsLoading(true);
     setToast(null);
-
     try {
       const cleanedData = cleanFormData(formData);
       const response = await fetch(SERVER_URL, {
@@ -531,22 +519,18 @@ const App = () => {
         },
         body: JSON.stringify(cleanedData),
       });
-
       if (!response.ok) {
         throw new Error(`Server error: ${response.status}`);
       }
-
       const result = await response.json();
       if (result.status !== 'Success' || !result.message) {
         throw new Error('Invalid server response');
       }
-
       const pdfUrl = result.message;
       const pdfResponse = await fetch(pdfUrl);
       if (!pdfResponse.ok) {
         throw new Error(`Failed to fetch PDF: ${pdfResponse.status}`);
       }
-
       const pdfBlob = await pdfResponse.blob();
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
@@ -559,7 +543,6 @@ const App = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-
       setToast({ message: 'Отчёт успешно сформирован и скачан!', type: 'success' });
     } catch (error) {
       console.error('Submission failed:', error);
@@ -1080,9 +1063,8 @@ const App = () => {
                   type="text"
                   value={formData.citizen_requests.personal_meetings}
                   onChange={(e) => handleNestedChange('citizen_requests', 'personal_meetings', e.target.value)}
-                  className={`${INPUT_CLASS} ${validationErrors['citizen_requests.personal_meetings'] ? 'border-red-500' : ''}`}
+                  className={INPUT_CLASS}
                 />
-                {renderError('citizen_requests.personal_meetings')}
               </div>
               <div>
                 <label className="font-semibold block mb-1">Количество данных ответов на обращения граждан</label>
@@ -1090,9 +1072,8 @@ const App = () => {
                   type="text"
                   value={formData.citizen_requests.responses}
                   onChange={(e) => handleNestedChange('citizen_requests', 'responses', e.target.value)}
-                  className={`${INPUT_CLASS} ${validationErrors['citizen_requests.responses'] ? 'border-red-500' : ''}`}
+                  className={INPUT_CLASS}
                 />
-                {renderError('citizen_requests.responses')}
               </div>
               <div>
                 <label className="font-semibold block mb-1">Количество депутатских запросов и обращений в органы власти и иные организации по поступившим обращениям граждан</label>
@@ -1100,9 +1081,8 @@ const App = () => {
                   type="text"
                   value={formData.citizen_requests.official_queries}
                   onChange={(e) => handleNestedChange('citizen_requests', 'official_queries', e.target.value)}
-                  className={`${INPUT_CLASS} ${validationErrors['citizen_requests.official_queries'] ? 'border-red-500' : ''}`}
+                  className={INPUT_CLASS}
                 />
-                {renderError('citizen_requests.official_queries')}
               </div>
             </div>
             <div className="mt-6 border-t pt-4">
@@ -1161,9 +1141,8 @@ const App = () => {
                           [topic.key]: e.target.value,
                         })
                       }
-                      className={`${INPUT_CLASS} ${validationErrors[`requests.${topic.key}`] ? 'border-red-500' : ''}`}
+                      className={INPUT_CLASS}
                     />
-                    {renderError(`requests.${topic.key}`)}
                   </div>
                 ))}
               </div>
@@ -1437,14 +1416,11 @@ const App = () => {
             </button>
           </AccordionSection>
           <AccordionSection title="7. Иная значимая информация" isOpen={accordionStates.other_info} onToggle={() => toggleAccordion('other_info')}>
-            <p className="text-black text-sm mb-4">
-              Укажите в свободной форме иную значимую информацию о вашей деятельности, не вошедшую в предыдущие разделы.
-            </p>
+            <label className="font-semibold block mb-1">Опишите другую важную деятельность, не вошедшую в предыдущие разделы</label>
             <textarea
               value={formData.other_info}
-              onChange={(e) => handleNestedChange('other_info', '', e.target.value)}
+              onChange={(e) => setFormData({ ...formData, other_info: e.target.value })}
               className={TEXTAREA_CLASS}
-              placeholder="Опишите в свободной форме..."
             />
           </AccordionSection>
           <div className="flex justify-center pt-6 border-t border-gray-300">
