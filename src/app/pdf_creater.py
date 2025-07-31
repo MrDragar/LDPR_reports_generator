@@ -437,7 +437,7 @@ def generate_html_report(data):
                 <div>
                     <p>ФИО: <strong>{data['general_info']['full_name']}</strong></p>
                     <p>Избирательный округ: {data['general_info']['district'].strip()}</p>
-                    <p>Регион: {data['general_info']['region'].strip()}</p>
+                    <p>Субъект Российской Федерации: {data['general_info']['region'].strip()}</p>
                     <p>Представительный орган власти: {data['general_info']['authority_name'].strip()}</p>
                     <p>Срок полномочий: {data['general_info']['term_start']} - {data['general_info']['term_end']}</p>
                     <p>Должность: {data['general_info']['position']}</p>
