@@ -3,6 +3,7 @@ import { PlusIcon, TrashIcon, SpinnerIcon } from './components/icons';
 import AccordionSection from './components/AccordionSection';
 
 const SERVER_URL = process.env.SERVER_URL;
+
 const INPUT_CLASS = 'w-full p-2 border-2 border-[#005BBB] rounded-md focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700] outline-none transition-shadow bg-gray-50 text-gray-900 placeholder:text-gray-500';
 const TEXTAREA_CLASS = `${INPUT_CLASS} min-h-[100px] resize-y`;
 const SELECT_CLASS = 'w-full p-2 border-2 border-[#005BBB] rounded-md focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700] outline-none transition-shadow bg-gray-50 text-gray-900';
@@ -209,7 +210,7 @@ const App = () => {
       }
     });
 
-    // Numeric fields validation (optional, only if filled)
+    // Numeric fields validation for citizen_requests
     const numericFields = [
       { path: 'citizen_requests', key: 'personal_meetings', label: 'Количество личных приемов граждан и встреч с избирателями' },
       { path: 'citizen_requests', key: 'responses', label: 'Количество данных ответов на обращения граждан' },
@@ -223,7 +224,7 @@ const App = () => {
       }
     });
 
-    // Request topics validation (optional, only if filled)
+    // Request topics validation
     REQUEST_TOPICS_CONFIG.forEach(({ key, label }) => {
       const value = formData.citizen_requests.requests[key];
       if (value && !/^\d+$/.test(value)) {
@@ -383,6 +384,7 @@ const App = () => {
   const validateForm = () => {
     setHasSubmitted(true);
     const errors = {};
+
     const requiredFields = [
       { path: 'general_info', key: 'full_name', label: 'ФИО депутата' },
       { path: 'general_info', key: 'district', label: 'Избирательный округ' },
@@ -514,9 +516,7 @@ const App = () => {
       const cleanedData = cleanFormData(formData);
       const response = await fetch(SERVER_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(cleanedData),
       });
       if (!response.ok) {
@@ -1063,8 +1063,9 @@ const App = () => {
                   type="text"
                   value={formData.citizen_requests.personal_meetings}
                   onChange={(e) => handleNestedChange('citizen_requests', 'personal_meetings', e.target.value)}
-                  className={INPUT_CLASS}
+                  className={`${INPUT_CLASS} ${validationErrors['citizen_requests.personal_meetings'] ? 'border-red-500' : ''}`}
                 />
+                {renderError('citizen_requests.personal_meetings')}
               </div>
               <div>
                 <label className="font-semibold block mb-1">Количество данных ответов на обращения граждан</label>
@@ -1072,8 +1073,9 @@ const App = () => {
                   type="text"
                   value={formData.citizen_requests.responses}
                   onChange={(e) => handleNestedChange('citizen_requests', 'responses', e.target.value)}
-                  className={INPUT_CLASS}
+                  className={`${INPUT_CLASS} ${validationErrors['citizen_requests.responses'] ? 'border-red-500' : ''}`}
                 />
+                {renderError('citizen_requests.responses')}
               </div>
               <div>
                 <label className="font-semibold block mb-1">Количество депутатских запросов и обращений в органы власти и иные организации по поступившим обращениям граждан</label>
@@ -1081,8 +1083,9 @@ const App = () => {
                   type="text"
                   value={formData.citizen_requests.official_queries}
                   onChange={(e) => handleNestedChange('citizen_requests', 'official_queries', e.target.value)}
-                  className={INPUT_CLASS}
+                  className={`${INPUT_CLASS} ${validationErrors['citizen_requests.official_queries'] ? 'border-red-500' : ''}`}
                 />
+                {renderError('citizen_requests.official_queries')}
               </div>
             </div>
             <div className="mt-6 border-t pt-4">
@@ -1141,8 +1144,9 @@ const App = () => {
                           [topic.key]: e.target.value,
                         })
                       }
-                      className={INPUT_CLASS}
+                      className={`${INPUT_CLASS} ${validationErrors[`requests.${topic.key}`] ? 'border-red-500' : ''}`}
                     />
+                    {renderError(`requests.${topic.key}`)}
                   </div>
                 ))}
               </div>
