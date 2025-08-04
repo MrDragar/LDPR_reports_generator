@@ -276,7 +276,7 @@ def generate_html_report(data):
                 count = 0
         count_mod_10 = count % 10
         count_mod_100 = count % 100
-        if count == 1 or count == 11:
+        if count == 1:
             return "заседания"
         elif count_mod_10 == 1 and count != 11:
             return "заседания"
