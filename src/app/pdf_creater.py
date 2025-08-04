@@ -276,29 +276,19 @@ def generate_html_report(data):
                 count = 0
         count_mod_10 = count % 10
         count_mod_100 = count % 100
-        if prepositional:
-            if count == 1:
-                return "заседании"
-            elif count_mod_10 in [2, 3, 4] and count_mod_100 not in [12, 13, 14]:
-                return "заседания"
-            else:
-                return "заседаниях"
+        if count == 1 or count == 11:
+            return "заседания"
+        elif count_mod_10 == 1 and count != 11:
+            return "заседания"
         else:
-            if count_mod_10 == 1 and count_mod_100 != 11:
-                return "заседание"
-            elif count_mod_10 in [2, 3, 4] and count_mod_100 not in [12, 13, 14]:
-                return "заседания"
-            else:
-                return "заседаний"
+            return "заседаний"
 
 
 
     sessions_total = declense_zasedanie(data['general_info']['sessions_attended']['total'])
-    sessions_attended = declense_zasedanie(data['general_info']['sessions_attended']['attended'], prepositional=True)
     committee_total = declense_zasedanie(data['general_info']['sessions_attended']['committee_total'])
-    committee_attended = declense_zasedanie(data['general_info']['sessions_attended']['committee_attended'], prepositional=True)
     ldpr_total = declense_zasedanie(data['general_info']['sessions_attended']['ldpr_total'])
-    ldpr_attended = declense_zasedanie(data['general_info']['sessions_attended']['ldpr_attended'], prepositional=True)
+
     personal_meetings = declense_noun("прием", data['citizen_requests']['personal_meetings'])
     responses = declense_noun("ответ", data['citizen_requests']['responses'])
     official_queries = declense_noun("запрос", data['citizen_requests']['official_queries'])
