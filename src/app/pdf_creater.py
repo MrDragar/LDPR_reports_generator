@@ -206,7 +206,7 @@ def generate_html_report(data):
         legislation_text = "законопроекты за отчетный период не вносились."
     else:
         legislation_items = [
-            f'<li class="mb-2"><strong>«{item["title"].strip()}»</strong>: {delete_dot(item["summary"].lower().strip())}. '
+            f'<li class="mb-2"><strong>«{item["title"].strip()}»</strong>: {delete_dot(item["summary"].strip())}. '
             f'<span>Статус: {item["status"]}.</span>'
             f'{"" if "rejection_reason" not in item or not item["rejection_reason"] else f" Причина отклонения: {delete_dot(item['rejection_reason'])}."}</li>'
             for item in data['legislation']
@@ -233,7 +233,7 @@ def generate_html_report(data):
         project_activity_text = "проекты и мероприятия за отчетный период не проводились."
     else:
         project_items = [
-            f'<li class="mb-2"><strong>«{item["name"].strip()}»</strong>: {delete_dot(item["result"].lower().strip())}.</li>'
+            f'<li class="mb-2"><strong>«{item["name"].strip()}»</strong>: {delete_dot(item["result"].strip())}.</li>'
             for item in data['project_activity']
         ]
         proj_noun = "проект" if count == 1 else "проектов"
@@ -247,7 +247,7 @@ def generate_html_report(data):
         ldpr_orders_text = "поручения Председателя ЛДПР за отчетный период отсутствуют."
     else:
         order_items = [
-            f'<li class="mb-2"><strong>«{item["instruction"].strip()}»</strong>: {delete_dot(item["action"].lower().strip())}.</li>'
+            f'<li class="mb-2"><strong>«{item["instruction"].strip()}»</strong>: {delete_dot(item["action"].strip())}.</li>'
             for item in data['ldpr_orders']
         ]
         noun = "поручение" if count == 1 else "поручений"
