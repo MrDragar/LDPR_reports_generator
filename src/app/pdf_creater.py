@@ -196,9 +196,10 @@ def generate_html_report(data):
         data['general_info']['links'],
         "Ссылки на ресурсы",
         lambda x: f'<a href="{x}" class="text-ldpr-blue">{x}</a>'
-    )
+    ) if data['general_info']['links'] else ""
     committees_text = ''.join(f'<li class="mb-2">{item}</li>' for item in data['general_info']['committees'])
     committees_text = f"<ul class='list-disc pl-6'>{committees_text}</ul>"
+    committees_text = f"<p>Комитеты и комиссии, в которых состоит:</p> {committees_text}" if data['general_info']['committees'] else ""
     # Format legislation
     legislation_text = ""
     count = len(data['legislation'])
@@ -432,7 +433,6 @@ def generate_html_report(data):
                     <p>Срок полномочий: {data['general_info']['term_start']} - {data['general_info']['term_end']}</p>
                     <p>Должность: {data['general_info']['position']}</p>
                     <p>Должность во фракции ЛДПР: {data['general_info']['ldpr_position']}</p>
-                    <p>Комитеты и комиссии, в которых состоит:</p>
                     {committees_text}
                     <p class="mb-4">Участие в заседаниях:</p>
                     <ul class="list-disc">
