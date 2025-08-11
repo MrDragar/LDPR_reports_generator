@@ -196,10 +196,10 @@ def generate_html_report(data):
         data['general_info']['links'],
         "Ссылки на ресурсы",
         lambda x: f'<a href="{x}" class="text-ldpr-blue">{x}</a>'
-    ) if data['general_info']['links'] else ""
+    ) if len(data['general_info']['links']) != 1 and data['general_info']['links'][0] else ""
     committees_text = ''.join(f'<li class="mb-2">{item}</li>' for item in data['general_info']['committees'])
     committees_text = f"<ul class='list-disc pl-6'>{committees_text}</ul>"
-    committees_text = f"<p>Комитеты и комиссии, в которых состоит:</p> {committees_text}" if data['general_info']['committees'] else ""
+    committees_text = f"<p>Комитеты и комиссии, в которых состоит:</p> {committees_text}" if len(data['general_info']['committees']) != 1 and data['general_info']['committees'][0] else ""
     # Format legislation
     legislation_text = ""
     count = len(data['legislation'])
