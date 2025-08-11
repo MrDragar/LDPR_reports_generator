@@ -418,7 +418,7 @@ def generate_html_report(data):
     <div class="header-content">
         <h1>ОТЧЕТ О ПРОДЕЛАННОЙ <br> РАБОТЕ ДЕПУТАТА</h1>
         <h2>{data['general_info']['full_name']}</h2>
-        <p>за период весенней сессии"</p>
+        <p>по итогам весенней сессии 2025 года</p>
     </div>
 </div>
 
