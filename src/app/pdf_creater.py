@@ -363,7 +363,7 @@ def generate_html_report(data):
             .header h2 {{ font-family: 'Geologica', sans-serif; font-weight: 600; font-size: 16px; line-height: 17px; margin-top: 8px;}}
             .header p {{ font-family: 'Geologica', sans-serif; font-weight: 400; font-size: 12px; line-height: 14.4px; text-align: center; }}
             .section-container {{ margin-bottom: 29px; position: relative; }}
-            h3 {{ font-family: 'Geologica', sans-serif; font-weight: 600; font-size: 26px; line-height: 22px; color: #000000; background: #87CEEB; padding: 3px 0; margin-bottom: 20px; width: 100%; }}
+            h3 {{ font-family: 'Geologica', sans-serif; font-weight: 600; font-size: 26px; line-height: 22px; color: #000000; background: #ccd8e8; padding: 3px 0; margin-bottom: 20px; width: 100%; }}
             h4 {{ text-align: center; }}
             p {{ 
                 margin: 0 0 6px 0; 
