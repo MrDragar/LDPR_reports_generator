@@ -5,7 +5,6 @@ import os
 import uuid
 import pathlib
 import matplotlib.pyplot as plt
-from matplotlib.ticker import MaxNLocator
 import matplotlib.transforms as mtrans
 
 def load_json_data(filename):
@@ -188,7 +187,7 @@ def generate_html_report(data):
     def just_list(items, head, item_format=lambda x: x):
         if not items:
             return
-        items_html = ''.join(f'<li class="mb-2">{item_format(item)}</li>' for item in items)
+        items_html = ''.join(f'<li class="mb-2 small">{item_format(item)}</li>' for item in items)
         return f"{head}: <ul class='list-disc pl-6'>{items_html}</ul>"
 
     # Format links
@@ -197,7 +196,7 @@ def generate_html_report(data):
         "Ссылки на ресурсы",
         lambda x: f'<a href="{x}" class="text-ldpr-blue">{x}</a>'
     ) if data['general_info']['links'] and len(data['general_info']['links']) != 1 and data['general_info']['links'][0] else ""
-    committees_text = ''.join(f'<li class="mb-2">{item}</li>' for item in data['general_info']['committees'])
+    committees_text = ''.join(f'<li class="mb-2 small">{item}</li>' for item in data['general_info']['committees'])
     committees_text = f"<ul class='list-disc pl-6'>{committees_text}</ul>"
     committees_text = f"<p>Комитеты и комиссии, в которых состоит:</p> {committees_text}" if data['general_info']['committees'] and len(data['general_info']['committees']) != 1 and data['general_info']['committees'][0] else ""
     # Format legislation
@@ -215,7 +214,8 @@ def generate_html_report(data):
         noun = "законопроект" if count == 1 else "законопроекты"
         local_noun = declense_noun("законопроект", count)
 
-        legislation_text = f"Инициировал {count} {local_noun} из которых внесено — {sum(1 for item in data['legislation'] if item['status'].startswith('Внесен'))}, принято — {sum(1 for item in data['legislation'] if item['status'] == 'Принят')}, отклонено — {sum(1 for item in data['legislation'] if item['status'] == 'Отклонен')}. "
+        # legislation_text = f"Инициировал {count} {local_noun} из которых внесено — {sum(1 for item in data['legislation'] if item['status'].startswith('Внесен'))}, принято — {sum(1 for item in data['legislation'] if item['status'] == 'Принят')}, отклонено — {sum(1 for item in data['legislation'] if item['status'] == 'Отклонен')}. "
+        legislation_text = f"Внесено по инициативе ЛДПР — {sum(1 for item in data['legislation'] if item['status'] == 'внесено по инициативе ЛДПР')}, внесено межфракционно —  {sum(1 for item in data['legislation'] if item['status'] == 'внесено по инициативе ЛДПР')}. Из них принято по инициативе ЛДПР — {sum(1 for item in data['legislation'] if item['status'] == 'Принято по инициативе ЛДПР')}, принято межфракционно — {sum(1 for item in data['legislation'] if item['status'] == 'Принято межфракционно')}, отклонено — {sum(1 for item in data['legislation'] if item['status'] == 'Отклонен')}. "
         legislation_text += f"<ul class='list-disc pl-6'>{''.join(legislation_items)}</ul>"
 
     # Format citizen request examples
@@ -299,9 +299,9 @@ def generate_html_report(data):
     ldpr_requests_text = f"""
     <p class="mt-4 big"><strong>Получено обращений на имя Председателя ЛДПР: <b>{data['citizen_requests']['requests'].get('appeals_to_ldpr_chairman', 0)}</b></strong></p>
     """ if int(data['citizen_requests']['requests'].get('appeals_to_ldpr_chairman', 0)) > 0 else ""
-    meeting_noun = declense_noun("встреча", sum(data["citizen_day_receptions"].values()))
+    meeting_noun = declense_noun("встреча", sum(data['citizen_requests']["citizen_day_receptions"].values()))
     citizen_requests_text = f"""
-    <p class="mb-4">Депутат провел <strong>{data['citizen_requests']['personal_meetings']}</strong> личных {personal_meetings} граждан в том числе {sum(data["citizen_day_receptions"].values())} {meeting_noun} в рамках Всероссийского дня приема граждан. За отчетный период поступило множество письменных обращений, охватывающих различные темы:</p>
+    <p class="mb-4">Депутат провел <strong>{data['citizen_requests']['personal_meetings']}</strong> личных {personal_meetings} граждан в том числе {sum(data['citizen_requests']["citizen_day_receptions"].values())} {meeting_noun} в рамках Всероссийского дня приема граждан. За отчетный период поступило множество письменных обращений, охватывающих различные темы:</p>
     <div class="table-container">
         {images_text}
     </div>
@@ -356,12 +356,14 @@ def generate_html_report(data):
            .header-content {{
                 flex-grow: 1;
                 padding: 0 20px;
+                margin-right: 140px
             }}
-            .header h1 {{ font-family: 'Geologica', sans-serif; font-size: 44px; font-weight: 400; text-transform: uppercase; line-height: 44px; margin-bottom: 6px; font-weight: 700;}}
+            .header-content h1.first {{ font-family: 'Geologica', sans-serif; font-size: 44px; font-weight: 400; text-transform: uppercase; line-height: 44px; margin-bottom: 6px; font-weight: 700;}}
+            .header h1.second {{ font-family: 'Geologica', sans-serif; font-size: 44px; font-weight: 400; text-transform: uppercase; line-height: 44px; margin-bottom: 6px; font-weight: 700;}}
             .header h2 {{ font-family: 'Geologica', sans-serif; font-weight: 600; font-size: 16px; line-height: 17px; margin-top: 8px;}}
             .header p {{ font-family: 'Geologica', sans-serif; font-weight: 400; font-size: 12px; line-height: 14.4px; text-align: center; }}
             .section-container {{ margin-bottom: 29px; position: relative; }}
-            h3 {{ font-family: 'Geologica', sans-serif; font-weight: 600; font-size: 26px; line-height: 22px; color: #000000; background: #FFC531; padding: 3px 0; margin-bottom: 20px; width: 100%; }}
+            h3 {{ font-family: 'Geologica', sans-serif; font-weight: 600; font-size: 26px; line-height: 22px; color: #000000; background: #87CEEB; padding: 3px 0; margin-bottom: 20px; width: 100%; }}
             h4 {{ text-align: center; }}
             p {{ 
                 margin: 0 0 6px 0; 
@@ -371,9 +373,19 @@ def generate_html_report(data):
                 font-size: 14.0px; line-height: 15.2px; 
             }}
             ul.list-disc {{ margin: 7px 0 6px 0; padding-left: 20px; list-style: none; }}
-            ul.list-disc li {{ position: relative; padding-left: 20px; list-style-type: none; }}
-            ul.list-disc li::before {{ content: ''; background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjYiIGhlaWdodD0iNjIiIHZpZXdCb3g9IjAgMCA2NiA2MyIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTM1Ljk1NTYgMjcuOTQyM0w0MC4yOTg2IDAuMzgwODU5SDI1LjI2NTFMMjkuNjA4MSAyNy45NDIzTDQuNzE5MzEgMTUuNDE0NEwwLjA0MjIxMzQgMjkuNjEyN0wyNy40MzY2IDM0LjI4OThMNy44OTMwNSA1My44MzMzTDE5LjkxOTkgNjIuNjg2NEwzMi43ODE4IDM3Ljk2NDZMNDUuNjQzOSA2Mi42ODY0TDU3LjY3MDcgNTMuODMzM0wzOC4xMjcxIDM0LjI4OThMNjUuNTIxNSAyOS42MTI3TDYwLjg0NDQgMTUuNDE0NEwzNS45NTU2IDI3Ljk0MjNaIiBmaWxsPSIjRkRDNDJFIi8+Cjwvc3ZnPgo="); background-repeat: no-repeat; background-size: contain; position: absolute; left: 0; width: 12px; height: 12px; top: 3px; }}
-            a {{ color: #394B8C; text-decoration: underline; }}
+            ul.list-disc li {{ position: relative; padding-left: 20px; list-style-type: none; padding-bottom: 10px}}
+            ul.list-disc li.small {{ padding-bottom: 0px}}
+            ul.list-disc li::before {{
+  content: ''; 
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjYiIGhlaWdodD0iNjIiIHZpZXdCb3g9IjAgMCA2NiA2MyIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTM1Ljk1NTYgMjcuOTQyM0w0MC4yOTg2IDAuMzgwODU5SDI1LjI2NTFMMjkuNjA4MSAyNy45NDIzTDQuNzE5MzEgMTUuNDE0NEwwLjA0MjIyMTM0IDI5LjYxMjdMMjcuNDM2NiAzNC4yODk4TDcuODkzMDUgNTMuODMzM0wxOS45MTk5IDYyLjY4NjRMMzIuNzgxOCAzNy45NjQ2TDQ1LjY0MzkgNjIuNjg2NEw1Ny42NzA3IDUzLjgzMzNMMzguMTI3MSAzNC4yODk4TDY1LjUyMTUgMjkuNjEyN0w2MC44NDQ0IDE1LjQxNDRMMzUuOTU1NiAyNy45NDIzWiIgZmlsbD0iIzNCODJGNiIvPgo8L3N2Zz4K"); 
+  background-repeat: no-repeat; 
+  background-size: contain; 
+  position: absolute; 
+  left: 0; 
+  width: 12px; 
+  height: 12px; 
+  top: 3px; 
+}}
             .table-container {{ background: #EAF1F9; border-radius: 20px; margin: 15px 0; padding: 10px; padding-left: 20px; text-align: center; }}
             strong {{ font-weight: 600; }}
             b {{ font-weight: 900; }}
@@ -413,12 +425,13 @@ def generate_html_report(data):
 <div class="header">
     <div class="header-decoration left"></div>
     <div class="header-decoration right">
-        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTQwIiBoZWlnaHQ9IjU0MCIgdmlld0JveD0iMCAwIDU0MCA1NDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMF8yMDY2XzM2NikiPgo8cGF0aCBkPSJNMCAzOTBDMCAzMjMuNzI2IDUzLjcyNTggMjcwIDEyMCAyNzBIMjcwVjU0MEgwVjM5MFoiIGZpbGw9IiNDQ0Q4RTgiLz4KPHBhdGggZD0iTTI3MCAxMjBDMjcwIDIwMi84NDMgMzM3LjE1NyAyNzAgNDIwIDI3MEg1NDBWMEgyNzBWMTIwWiIgZmlsbD0iIzIzMjI1QiIvPgo8cGF0aCBkPSJNNTQwIDU0MFYyNzBIMjcwVjU0MEg1NDBaIiBmaWxsPSIjRkZDNTMxIi8+CjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNMjcwIDQ0OUMyNzAgMzUwLjE0MSAxODkuODU5IDI3MCA5MSAyNzBDMTg5Ljg1OSAyNzAgMjc0IDE4OS44NTkgMjcwIDkxQzI3MCAxODkuODU5IDM1MC4xNDEgMjc0IDQ0OSAyNzBDMzUwLjE0MSAyNzAgMjc0IDM1MC4xNDEgMjcwIDQ0OVoiIGZpbGw9IndoaXRlIi8+CjwvZz4KPGRlZnM+CjxjbGlwUGF0aCBpZD0iY2xpcDBfMjA2Nl8zNjYiPgo8cmVjdCB3aWR0aD0iNTQwIiBoZWlnaHQ9IjU0MCIgZmlsbD0id2hpdGUiLz4KPC9jbGlwUGF0aD4KPC9kZWZzPgo8L3N2Zz4K" alt="Right decoration">
+        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTQwIiBoZWlnaHQ9IjU0MCIgdmlld0JveD0iMCAwIDU0MCA1NDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgY2xpcC1wYXRoPSJ1cmwoI2NsaXAwXzIwNjZfMzY2KSI+PHBhdGggZD0iTTAgMzkwQzAgMzIzLjcyNiA1My43MjU4IDI3MCAxMjAgMjcwSDI3MFY1NDBIMFYzOTBaIiBmaWxsPSIjQ0NEOEU4Ii8+PHBhdGggZD0iTTI3MCAxMjBDMjcwIDIwMi84NDMgMzM3LjE1NyAyNzAgNDIwIDI3MEg1NDBWMEgyNzBWMTIwWiIgZmlsbD0iIzM5NEI4QyIvPjxwYXRoIGQ9Ik01NDAgNTQwVjI3MEgyNzBWNTQwSDU0MFoiIGZpbGw9IiNGRkM1MzEiLz48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCIgZD0iTTI3MCA0NDlDMjcwIDM1MC4xNDEgMTg5Ljg1OSAyNzAgOTEgMjcwQzE4OS44NTkgMjcwIDI3NCAxODkuODU5IDI3MCA5MUMyNzAgMTg5Ljg1OSAzNTAuMTQxIDI3NCA0NDkgMjcwQzM1MC4xNDEgMjcwIDI3NCAzNTAuMTQxIDI3MCA0NDlaIiBmaWxsPSJ3aGl0ZSIvPjwvZz48ZGVmcz48Y2xpcFBhdGggaWQ9ImNsaXAwXzIwNjZfMzY2Ij48cmVjdCB3aWR0aD0iNTQwIiBoZWlnaHQ9IjU0MCIgZmlsbD0id2hpdGUiLz48L2NsaXBQYXRoPjwvZGVmcz48L3N2Zz4=" alt="Right decoration">
     </div>
     <div class="header-content">
-        <h1>ОТЧЕТ О ПРОДЕЛАННОЙ <br> РАБОТЕ ДЕПУТАТА</h1>
+        <h1 class="first">ОТЧЕТ О ПРОДЕЛАННОЙ</h1> 
+        <h1 class="second">РАБОТЕ ДЕПУТАТА ЛДПР</h1>
         <h2>{data['general_info']['full_name']}</h2>
-        <p>по итогам весенней сессии 2025 года</p>
+        <p>по итогам осенней сессии 2025 года</p>
     </div>
 </div>
 
@@ -436,9 +449,9 @@ def generate_html_report(data):
                     {committees_text}
                     <p class="mb-4">Участие в заседаниях:</p>
                     <ul class="list-disc">
-                        <li>Заседания органа власти: присутствовал на {data['general_info']['sessions_attended']['attended']} из {data['general_info']['sessions_attended']['total']} {sessions_total}.</li>
-                        <li>Заседания комитетов: присутствовал на {data['general_info']['sessions_attended']['committee_attended']} из {data['general_info']['sessions_attended']['committee_total']} {committee_total}.</li>
-                        <li>Заседания фракции ЛДПР: присутствовал на {data['general_info']['sessions_attended']['ldpr_attended']} из {data['general_info']['sessions_attended']['ldpr_total']} {ldpr_total}.</li>
+                        <li class="small">Заседания органа власти: присутствовал на {data['general_info']['sessions_attended']['attended']} из {data['general_info']['sessions_attended']['total']} {sessions_total}.</li>
+                        <li class="small">Заседания комитетов: присутствовал на {data['general_info']['sessions_attended']['committee_attended']} из {data['general_info']['sessions_attended']['committee_total']} {committee_total}.</li>
+                        <li class="small">Заседания фракции ЛДПР: присутствовал на {data['general_info']['sessions_attended']['ldpr_attended']} из {data['general_info']['sessions_attended']['ldpr_total']} {ldpr_total}.</li>
                     </ul>
                     {links_text}
                 </div>
@@ -500,9 +513,10 @@ def generate_pdf_report(json_data, output_filename, debug=False):
             if os.path.exists(image_path):
                 os.remove(image_path)
 
+
 if __name__ == "__main__":
-    input_file = "ldpr_report_слуцкий_леонид_эдуардович_2025_07_24_5.json"
-    output_file = "ldpr_report_слуцкий_леонид_эдуардович_2025_07_24_5.pdf"
+    input_file = "report_ldpr_Абдель_Щеняй_Ярослав.json"
+    output_file = "report_ldpr_Абдель_Щеняй_Ярослав.pdf"
 
     json_data = load_json_data(input_file)
     generate_pdf_report(json_data, output_file, True)
