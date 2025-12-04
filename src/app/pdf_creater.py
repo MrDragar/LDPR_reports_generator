@@ -214,8 +214,8 @@ def generate_html_report(data):
         noun = "законопроект" if count == 1 else "законопроекты"
         local_noun = declense_noun("законопроект", count)
 
-        # legislation_text = f"Инициировал {count} {local_noun} из которых внесено — {sum(1 for item in data['legislation'] if item['status'].startswith('Внесен'))}, принято — {sum(1 for item in data['legislation'] if item['status'] == 'Принят')}, отклонено — {sum(1 for item in data['legislation'] if item['status'] == 'Отклонен')}. "
-        legislation_text = f"Внесено по инициативе ЛДПР — {sum(1 for item in data['legislation'] if item['status'] == 'внесено по инициативе ЛДПР')}, внесено межфракционно —  {sum(1 for item in data['legislation'] if item['status'] == 'внесено по инициативе ЛДПР')}. Из них принято по инициативе ЛДПР — {sum(1 for item in data['legislation'] if item['status'] == 'Принято по инициативе ЛДПР')}, принято межфракционно — {sum(1 for item in data['legislation'] if item['status'] == 'Принято межфракционно')}, отклонено — {sum(1 for item in data['legislation'] if item['status'] == 'Отклонен')}. "
+        legislation_text = f"Внёс {count} {local_noun} из которых принято — {sum(1 for item in data['legislation'] if item['status'].startswith('Принято'))}, отклонено — {sum(1 for item in data['legislation'] if item['status'] == 'Отклонено')}."
+        # legislation_text = f"Внесено по инициативе ЛДПР — {sum(1 for item in data['legislation'] if item['status'] == 'внесено по инициативе ЛДПР')}, внесено межфракционно —  {sum(1 for item in data['legislation'] if item['status'] == 'внесено по инициативе ЛДПР')}. Из них принято по инициативе ЛДПР — {sum(1 for item in data['legislation'] if item['status'] == 'Принято по инициативе ЛДПР')}, принято межфракционно — {sum(1 for item in data['legislation'] if item['status'] == 'Принято межфракционно')}, отклонено — {sum(1 for item in data['legislation'] if item['status'] == 'Отклонен')}. "
         legislation_text += f"<ul class='list-disc pl-6'>{''.join(legislation_items)}</ul>"
 
     # Format citizen request examples
